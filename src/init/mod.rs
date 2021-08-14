@@ -1,7 +1,12 @@
 use crate::opt::InitArgs;
 
-pub fn run(_args: &InitArgs) {
-    let init_script = include_str!("zabrze.zsh");
+static INIT_SCRIPT: &'static str = include_str!("zabrze-init.zsh");
+static BIND_KEYS_SCRIPT: &'static str = include_str!("zabrze-bindkey.zsh");
 
-    print!("{}", init_script);
+pub fn run(args: &InitArgs) {
+    print!("{}", INIT_SCRIPT);
+
+    if args.bind_keys {
+        print!("{}", BIND_KEYS_SCRIPT);
+    }
 }

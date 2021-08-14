@@ -30,13 +30,16 @@ pub enum Subcommand {
 }
 
 #[derive(Debug, StructOpt)]
-pub struct InitArgs {}
+pub struct InitArgs {
+    #[structopt(help = "Enable default key bindings", long)]
+    pub bind_keys: bool,
+}
 
 #[derive(Debug, StructOpt)]
 pub struct ExpandArgs {
-    #[structopt(help = "$LBUFFER", long = "lbuffer", short = "l")]
+    #[structopt(help = "$LBUFFER", long, short = "l")]
     pub lbuffer: String,
 
-    #[structopt(help = "$RBUFFER", long = "rbuffer", short = "r")]
+    #[structopt(help = "$RBUFFER", long, short = "r")]
     pub rbuffer: String,
 }
