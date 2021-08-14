@@ -1,3 +1,4 @@
+mod config;
 mod expand;
 mod init;
 mod opt;
