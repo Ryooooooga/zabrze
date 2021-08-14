@@ -1,8 +1,20 @@
 [package]
 name = "zabrze"
 version = "0.1.0"
-edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ['Ryooooooga <eial5q265e5@gmail.com>']
+description = 'ZSH abbreviation exapansion plugin'
+license = 'MIT'
+readme = 'README.md'
+repository = 'https://github.com/Ryooooooga/almel'
+keywords = [
+    'zsh',
+    'zsh-plugin',
+]
+edition = '2018'
 
 [dependencies]
+regex = "1.5"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.8"
+structopt = "0.3"
+thiserror = "1.0"
