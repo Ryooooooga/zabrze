@@ -1,5 +1,7 @@
+pub mod abbrev;
 pub mod config_path;
 
+pub use abbrev::Abbrev;
 pub use config_path::default_config_path;
 
 use ansi_term::Color;
@@ -21,14 +23,6 @@ pub enum ConfigError {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     pub abbrevs: Vec<Abbrev>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Abbrev {
-    pub name: Option<String>,
-    pub abbr: String,
-    pub snippet: String,
-    pub context: Option<String>,
 }
 
 impl Config {

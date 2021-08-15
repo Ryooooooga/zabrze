@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn test_config_path() {
         struct Scenario {
-            pub name: &'static str,
+            pub testname: &'static str,
             pub envs: HashMap<&'static str, &'static str>,
             pub home: &'static str,
             pub expected: &'static str,
@@ -83,7 +83,7 @@ mod tests {
 
         let scenarios = [
             Scenario {
-                name: "follow ZABRZE_CONFIG_FILE",
+                testname: "follow ZABRZE_CONFIG_FILE",
                 envs: vec![
                     ("ZABRZE_CONFIG_FILE", "/home/user/.zabrze.yaml"),
                     ("XDG_CONFIG_HOME", "/home/user/.xdgConfig"),
@@ -94,7 +94,7 @@ mod tests {
                 expected: "/home/user/.zabrze.yaml",
             },
             Scenario {
-                name: "follow XDG_CONFIG_HOME",
+                testname: "follow XDG_CONFIG_HOME",
                 envs: vec![("XDG_CONFIG_HOME", "/home/user/.xdgConfig")]
                     .into_iter()
                     .collect(),
@@ -102,7 +102,7 @@ mod tests {
                 expected: "/home/user/.xdgConfig/zabrze/config.yaml",
             },
             Scenario {
-                name: "use default path",
+                testname: "use default path",
                 envs: HashMap::new(),
                 home: "/home/user/",
                 expected: "/home/user/.config/zabrze/config.yaml",
@@ -117,7 +117,7 @@ mod tests {
 
             let expected = Some(PathBuf::from(s.expected));
 
-            assert_eq!(get_default_path(&c), expected, "{}", s.name);
+            assert_eq!(get_default_path(&c), expected, "{}", s.testname);
         }
     }
 }
