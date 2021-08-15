@@ -17,3 +17,49 @@ jobs:
 
       - name: Run tests
         run: cargo test --verbose
+
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-apple-darwin
+          - x86_64-unknown-linux-gnu
+        include:
+          - target: x86_64-apple-darwin
+            os: macOS-latest
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+
+    name: Release - ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    needs: [build]
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable-${{ matrix.target }}
+          default: true
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Rename an asset
+        id: asset
+        run: |
+          EXECUTABLE="./target/release/${GITHUB_REPOSITORY#*/}"
+          ASSET="${GITHUB_REPOSITORY#*/}-${GITHUB_REF#refs/tags/}-${{ matrix.target }}.tar.gz"
+          tar cfv "./$ASSET" "$EXECUTABLE"
+          echo "::set-output name=asset::$ASSET"
+        shell: bash
+
+      - name: Upload
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.asset.outputs.asset }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
