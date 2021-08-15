@@ -27,6 +27,13 @@ abbrevs:
     snippet: commit -m
     global: true
     context: '^git\s+'
+
+  - name: branch name
+    abbr: B
+    snippet: $(git symbolic-ref --short HEAD)
+    evaluate: true
+    global: true
+    context: '^git\s+'
 ```
 
 ```zsh
@@ -39,6 +46,10 @@ then
 $ g<SP>cm<SP>
 #  ↓ expanded
 $ git commit -m 
+
+$ git show B<CR>
+#  ↓ expanded
+$ git show main
 ```
 
 ## Installation
