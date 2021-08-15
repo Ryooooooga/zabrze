@@ -50,10 +50,11 @@ jobs:
       - name: Rename an asset
         id: asset
         run: |
-          EXECUTABLE="./target/release/${GITHUB_REPOSITORY#*/}"
-          ASSET="${GITHUB_REPOSITORY#*/}-${GITHUB_REF#refs/tags/}-${{ matrix.target }}.tar.gz"
-          tar cfv "./$ASSET" "$EXECUTABLE"
-          echo "::set-output name=asset::$ASSET"
+          EXECUTABLE="${GITHUB_REPOSITORY#*/}"
+          ASSET="${EXECUTABLE}-${GITHUB_REF#refs/tags/}-${{ matrix.target }}.tar.gz"
+          mv "./target/release/${EXECUTABLE}" "./${EXECUTABLE}"
+          tar czfv "./${ASSET}" "${EXECUTABLE}"
+          echo "::set-output name=asset::${ASSET}"
         shell: bash
 
       - name: Upload
