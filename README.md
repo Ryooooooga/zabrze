@@ -1,6 +1,7 @@
 # zabrze
 
 [![](https://github.com/Ryooooooga/zabrze/actions/workflows/build.yml/badge.svg)](https://github.com/Ryooooooga/zabrze/actions/workflows/build.yml)
+[![](https://badgen.net/crates/v/zabrze)](https://crates.io/crates/zabrze)
 
 zsh abbreviation exapnsion plugin
 
@@ -38,6 +39,26 @@ then
 $ g<SP>cm<SP>
 #  ↓ expanded
 $ git commit -m 
+```
+
+## Installation
+
+### From prebuilt binary
+
+You can download a binary release [here](https://github.com/Ryooooooga/zabrze/releases).
+
+## zinit
+
+```zsh
+zinit blockf light-mode as"program" from"gh-r" for \
+    atload'eval "$(zabrze init --bind-keys)"' \
+    Ryooooooga/zabrze
+```
+
+## Cargo
+
+```zsh
+$ cargo install zabrze
 ```
 
 ## Alternatives

@@ -21,5 +21,5 @@ zabrze::expand-and-accept-line() {
 }
 
 zabrze::insert-space() {
-    BUFFER+=" "
+    LBUFFER+=" "
 }

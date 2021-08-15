@@ -2,11 +2,11 @@ use std::env;
 use std::ffi::OsString;
 use std::path::PathBuf;
 
-static ZABRZE_CONFIG_FILE_ENV_KEY: &'static str = "ZABRZE_CONFIG_FILE";
-static XDG_CONFIG_HOME_ENV_KEY: &'static str = "XDG_CONFIG_HOME";
+static ZABRZE_CONFIG_FILE_ENV_KEY: &str = "ZABRZE_CONFIG_FILE";
+static XDG_CONFIG_HOME_ENV_KEY: &str = "XDG_CONFIG_HOME";
 
-static DEFAULT_CONFIG_DIR: &'static str = "zabrze";
-static DEFAULT_CONFIG_FILE: &'static str = "config.yaml";
+static DEFAULT_CONFIG_DIR: &str = "zabrze";
+static DEFAULT_CONFIG_FILE: &str = "config.yaml";
 
 trait ConfigPath {
     fn env(&self, key: &str) -> Option<OsString>;
