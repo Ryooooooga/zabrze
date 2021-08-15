@@ -1,5 +1,7 @@
 # zabrze
 
+[![](https://github.com/Ryooooooga/zabrze/actions/workflows/build.yml/badge.svg)](https://github.com/Ryooooooga/zabrze/actions/workflows/build.yml)
+
 zsh abbreviation exapnsion plugin
 
 ## Usage
