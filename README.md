@@ -3,7 +3,7 @@
 [![](https://github.com/Ryooooooga/zabrze/actions/workflows/build.yml/badge.svg)](https://github.com/Ryooooooga/zabrze/actions/workflows/build.yml)
 [![](https://badgen.net/crates/v/zabrze)](https://crates.io/crates/zabrze)
 
-zsh abbreviation exapnsion plugin
+ZSH abbreviation expansion plugin
 
 ## Usage
 
