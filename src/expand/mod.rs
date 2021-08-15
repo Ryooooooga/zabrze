@@ -4,22 +4,28 @@ use shell_escape::escape;
 use std::borrow::Cow;
 
 #[derive(Debug, PartialEq)]
-pub struct ExpandResult {
-    pub buffer: String,
-    pub cursor: usize,
+pub struct ExpandResult<'a> {
+    pub command: &'a str,
+    pub snippet: &'a str,
+    pub evaluate: bool,
+    pub rbuffer: &'a str,
 }
 
 pub fn run(args: &ExpandArgs) {
     if let Some(result) = expand(args, &Config::load_or_exit()) {
+        let command = escape(Cow::from(result.command));
+        let snippet = escape(Cow::from(result.snippet));
+        let rbuffer = escape(Cow::from(result.rbuffer));
+        let evaluate = if result.evaluate { "(e)" } else { "" };
+
         println!(
-            r"BUFFER={};CURSOR={}",
-            escape(Cow::from(result.buffer)),
-            result.cursor
+            r#"local command={};local snippet={};LBUFFER="${{command}}${{{}snippet}}";RBUFFER={};"#,
+            command, snippet, evaluate, rbuffer
         );
     }
 }
 
-fn expand(args: &ExpandArgs, config: &Config) -> Option<ExpandResult> {
+fn expand<'a>(args: &'a ExpandArgs, config: &'a Config) -> Option<ExpandResult<'a>> {
     let lbuffer = &args.lbuffer;
     let rbuffer = &args.rbuffer;
 
@@ -38,11 +44,12 @@ fn expand(args: &ExpandArgs, config: &Config) -> Option<ExpandResult> {
     let last_arg_index = lbuffer.len() - last_arg.len();
     let lbuffer_without_last_arg = &lbuffer[..last_arg_index];
 
-    let new_lbuffer = format!("{}{}", lbuffer_without_last_arg, abbrev.snippet);
-    let buffer = format!("{}{}", new_lbuffer, rbuffer);
-    let cursor = new_lbuffer.chars().count();
-
-    Some(ExpandResult { buffer, cursor })
+    Some(ExpandResult {
+        command: lbuffer_without_last_arg,
+        snippet: &abbrev.snippet,
+        evaluate: abbrev.evaluate,
+        rbuffer,
+    })
 }
 
 #[cfg(test)]
@@ -67,6 +74,11 @@ mod tests {
                 abbr: null
                 snippet: '>/dev/null'
                 global: true
+
+              - name: $HOME
+                abbr: home
+                snippet: $HOME
+                evaluate: true
             ",
         )
         .unwrap()
@@ -76,11 +88,11 @@ mod tests {
     fn test_expand() {
         let config = test_config();
 
-        struct Scenario {
-            pub testname: &'static str,
-            pub lbuffer: &'static str,
-            pub rbuffer: &'static str,
-            pub expected: Option<ExpandResult>,
+        struct Scenario<'a> {
+            pub testname: &'a str,
+            pub lbuffer: &'a str,
+            pub rbuffer: &'a str,
+            pub expected: Option<ExpandResult<'a>>,
         }
 
         let scenarios = &[
@@ -95,8 +107,10 @@ mod tests {
                 lbuffer: "g",
                 rbuffer: "",
                 expected: Some(ExpandResult {
-                    buffer: "git".to_string(),
-                    cursor: 3,
+                    command: "",
+                    snippet: "git",
+                    evaluate: false,
+                    rbuffer: "",
                 }),
             },
             Scenario {
@@ -104,8 +118,10 @@ mod tests {
                 lbuffer: "g",
                 rbuffer: " --pager=never",
                 expected: Some(ExpandResult {
-                    buffer: "git --pager=never".to_string(),
-                    cursor: 3,
+                    command: "",
+                    snippet: "git",
+                    evaluate: false,
+                    rbuffer: " --pager=never",
                 }),
             },
             Scenario {
@@ -113,8 +129,10 @@ mod tests {
                 lbuffer: "echo hello; g",
                 rbuffer: "",
                 expected: Some(ExpandResult {
-                    buffer: "echo hello; git".to_string(),
-                    cursor: 15,
+                    command: "echo hello; ",
+                    snippet: "git",
+                    evaluate: false,
+                    rbuffer: "",
                 }),
             },
             Scenario {
@@ -122,8 +140,10 @@ mod tests {
                 lbuffer: "echo hello null",
                 rbuffer: "",
                 expected: Some(ExpandResult {
-                    buffer: "echo hello >/dev/null".to_string(),
-                    cursor: 21,
+                    command: "echo hello ",
+                    snippet: ">/dev/null",
+                    evaluate: false,
+                    rbuffer: "",
                 }),
             },
             Scenario {
@@ -131,8 +151,10 @@ mod tests {
                 lbuffer: "echo hello; git c",
                 rbuffer: " -m hello",
                 expected: Some(ExpandResult {
-                    buffer: "echo hello; git commit -m hello".to_string(),
-                    cursor: 22,
+                    command: "echo hello; git ",
+                    snippet: "commit",
+                    evaluate: false,
+                    rbuffer: " -m hello",
                 }),
             },
             Scenario {
@@ -147,16 +169,26 @@ mod tests {
                 rbuffer: " hello",
                 expected: None,
             },
+            Scenario {
+                testname: "simple abbr with evaluate=true",
+                lbuffer: "home",
+                rbuffer: "",
+                expected: Some(ExpandResult {
+                    command: "",
+                    snippet: "$HOME",
+                    evaluate: true,
+                    rbuffer: "",
+                }),
+            },
         ];
 
         for s in scenarios {
-            let actual = expand(
-                &ExpandArgs {
-                    lbuffer: s.lbuffer.to_string(),
-                    rbuffer: s.rbuffer.to_string(),
-                },
-                &config,
-            );
+            let args = ExpandArgs {
+                lbuffer: s.lbuffer.to_string(),
+                rbuffer: s.rbuffer.to_string(),
+            };
+
+            let actual = expand(&args, &config);
 
             assert_eq!(actual, s.expected, "{}", s.testname);
         }

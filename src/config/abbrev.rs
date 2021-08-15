@@ -9,8 +9,11 @@ pub struct Abbrev {
     pub snippet: String,
     pub context: Option<String>,
 
-    #[serde(default)]
+    #[serde(default = "default_as_false")]
     pub global: bool,
+
+    #[serde(default = "default_as_false")]
+    pub evaluate: bool,
 }
 
 impl Abbrev {
@@ -64,6 +67,7 @@ mod tests {
                     snippet: String::new(),
                     context: None,
                     global: false,
+                    evaluate: false,
                 },
                 command: "test",
                 last_arg: "test",
@@ -77,6 +81,7 @@ mod tests {
                     snippet: String::new(),
                     context: None,
                     global: false,
+                    evaluate: false,
                 },
                 command: "echo test",
                 last_arg: "test",
@@ -90,6 +95,7 @@ mod tests {
                     snippet: String::new(),
                     context: None,
                     global: true,
+                    evaluate: false,
                 },
                 command: "echo test",
                 last_arg: "test",
@@ -103,6 +109,7 @@ mod tests {
                     snippet: String::new(),
                     context: Some("^echo ".to_string()),
                     global: true,
+                    evaluate: false,
                 },
                 command: "echo test",
                 last_arg: "test",
@@ -116,6 +123,7 @@ mod tests {
                     snippet: String::new(),
                     context: Some("^printf ".to_string()),
                     global: true,
+                    evaluate: false,
                 },
                 command: "echo test",
                 last_arg: "test",
@@ -129,6 +137,7 @@ mod tests {
                     snippet: String::new(),
                     context: Some("(echo".to_string()),
                     global: true,
+                    evaluate: false,
                 },
                 command: "echo test",
                 last_arg: "test",
@@ -145,4 +154,8 @@ mod tests {
             );
         }
     }
+}
+
+fn default_as_false() -> bool {
+    false
 }
