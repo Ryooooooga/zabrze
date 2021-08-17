@@ -26,14 +26,14 @@ abbrevs:
     abbr: cm
     snippet: commit -m
     global: true
-    context: '^git\s+'
+    context: '^git\s'
 
   - name: branch name
     abbr: B
     snippet: $(git symbolic-ref --short HEAD)
     evaluate: true
     global: true
-    context: '^git\s+'
+    context: '^git\s'
 ```
 
 ```zsh
