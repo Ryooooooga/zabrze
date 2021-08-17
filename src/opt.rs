@@ -25,6 +25,9 @@ pub enum Subcommand {
     #[structopt(about = "Initialize the plugin")]
     Init(InitArgs),
 
+    #[structopt(about = "List abbreviations")]
+    List(ListArgs),
+
     #[structopt(about = "Expand abbreviation")]
     Expand(ExpandArgs),
 }
@@ -34,6 +37,9 @@ pub struct InitArgs {
     #[structopt(help = "Enable default key bindings", long)]
     pub bind_keys: bool,
 }
+
+#[derive(Debug, StructOpt)]
+pub struct ListArgs {}
 
 #[derive(Debug, StructOpt)]
 pub struct ExpandArgs {
