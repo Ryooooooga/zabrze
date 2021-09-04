@@ -58,6 +58,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - uses: actions-rs/toolchain@v1
         with:
