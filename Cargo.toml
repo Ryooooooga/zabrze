@@ -5,7 +5,7 @@ authors = ['Ryooooooga <eial5q265e5@gmail.com>']
 description = 'ZSH abbreviation exapansion plugin'
 license = 'MIT'
 readme = 'README.md'
-repository = 'https://github.com/Ryooooooga/almel'
+repository = 'https://github.com/Ryooooooga/zabrze'
 keywords = [
     'zsh',
     'zsh-plugin',
