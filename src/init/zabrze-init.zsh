@@ -1,5 +1,5 @@
 zle -N __zabrze::expand
-zle -N __zabrze::expand-and-insert-self
+zle -N __zabrze::expand-and-insert-space
 zle -N __zabrze::expand-and-accept-line
 zle -N __zabrze::insert-space
 
@@ -10,9 +10,10 @@ __zabrze::expand() {
     [ "$exit_code" -eq 0 ] && eval "$out"
 }
 
-__zabrze::expand-and-insert-self() {
+__zabrze::expand-and-insert-space() {
     zle __zabrze::expand
-    zle self-insert
+    [ -n "$__zabrze_insert_space" ] && zle __zabrze::insert-space
+    zle reset-prompt
 }
 
 __zabrze::expand-and-accept-line() {
