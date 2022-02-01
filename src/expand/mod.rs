@@ -10,7 +10,7 @@ pub struct ExpandResult<'a> {
     pub left_snippet: &'a str,
     pub right_snippet: &'a str,
     pub evaluate: bool,
-    pub insert_space: bool,
+    pub has_placeholder: bool,
 }
 
 pub fn run(args: &ExpandArgs) {
@@ -20,7 +20,7 @@ pub fn run(args: &ExpandArgs) {
         let right_snippet = escape(Cow::from(result.right_snippet));
         let rbuffer = escape(Cow::from(result.rbuffer));
         let evaluate = if result.evaluate { "(e)" } else { "" };
-        let insert_space = if result.insert_space { "1" } else { "" };
+        let has_placeholder = if result.has_placeholder { "1" } else { "" };
 
         print!(r"local lbuffer={};", lbuffer);
         print!(r"local rbuffer={};", rbuffer);
@@ -28,8 +28,8 @@ pub fn run(args: &ExpandArgs) {
         print!(r"local right_snippet={};", right_snippet);
         print!(r#"LBUFFER="${{lbuffer}}${{{evaluate}left_snippet}}";"#);
         print!(r#"RBUFFER="${{{evaluate}right_snippet}}${{rbuffer}}";"#);
-        print!(r"__zabrze_insert_space={insert_space};");
-        print!("\n");
+        print!(r"__zabrze_has_placeholder={has_placeholder};");
+        println!();
     }
 }
 
@@ -52,7 +52,7 @@ fn expand<'a>(args: &'a ExpandArgs, config: &'a Config) -> Option<ExpandResult<'
     let last_arg_index = lbuffer.len() - last_arg.len();
     let lbuffer_without_last_arg = &lbuffer[..last_arg_index];
 
-    let (left_snippet, right_snippet, insert_space) = split_snippet(&abbrev.snippet);
+    let (left_snippet, right_snippet, has_placeholder) = split_snippet(&abbrev.snippet);
 
     Some(ExpandResult {
         lbuffer: lbuffer_without_last_arg,
@@ -60,7 +60,7 @@ fn expand<'a>(args: &'a ExpandArgs, config: &'a Config) -> Option<ExpandResult<'
         left_snippet,
         right_snippet,
         evaluate: abbrev.evaluate,
-        insert_space,
+        has_placeholder,
     })
 }
 
@@ -130,7 +130,7 @@ mod tests {
                     left_snippet: "git",
                     right_snippet: "",
                     evaluate: false,
-                    insert_space: true,
+                    has_placeholder: false,
                 }),
             },
             Scenario {
@@ -143,7 +143,7 @@ mod tests {
                     left_snippet: "git",
                     right_snippet: "",
                     evaluate: false,
-                    insert_space: true,
+                    has_placeholder: false,
                 }),
             },
             Scenario {
@@ -156,7 +156,7 @@ mod tests {
                     left_snippet: "git",
                     right_snippet: "",
                     evaluate: false,
-                    insert_space: true,
+                    has_placeholder: false,
                 }),
             },
             Scenario {
@@ -169,7 +169,7 @@ mod tests {
                     left_snippet: ">/dev/null",
                     right_snippet: "",
                     evaluate: false,
-                    insert_space: true,
+                    has_placeholder: false,
                 }),
             },
             Scenario {
@@ -182,7 +182,7 @@ mod tests {
                     left_snippet: "commit",
                     right_snippet: "",
                     evaluate: false,
-                    insert_space: true,
+                    has_placeholder: false,
                 }),
             },
             Scenario {
@@ -207,7 +207,7 @@ mod tests {
                     left_snippet: "$HOME",
                     right_snippet: "",
                     evaluate: true,
-                    insert_space: true,
+                    has_placeholder: false,
                 }),
             },
             Scenario {
@@ -220,7 +220,7 @@ mod tests {
                     left_snippet: "commit -m '",
                     right_snippet: "'",
                     evaluate: false,
-                    insert_space: false,
+                    has_placeholder: true,
                 }),
             },
         ];
@@ -256,12 +256,12 @@ fn split_snippet(snippet: &str) -> (&str, &str, bool) {
     const PLACEHOLDER: &str = "{}";
     snippet
         .split_once(PLACEHOLDER)
-        .map(|(left, right)| (left, right, false))
-        .unwrap_or((snippet, "", true))
+        .map(|(left, right)| (left, right, true))
+        .unwrap_or((snippet, "", false))
 }
 
 #[test]
 fn test_split_snippet() {
-    assert_eq!(split_snippet("foo bar"), ("foo bar", "", true));
-    assert_eq!(split_snippet("foo{}bar"), ("foo", "bar", false));
+    assert_eq!(split_snippet("foo bar"), ("foo bar", "", false));
+    assert_eq!(split_snippet("foo{}bar"), ("foo", "bar", true));
 }
