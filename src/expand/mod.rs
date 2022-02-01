@@ -255,14 +255,10 @@ fn test_find_last_command_index() {
 
 fn split_snippet(snippet: &str) -> (&str, &str, bool) {
     const PLACEHOLDER: &str = "{}";
-    match snippet.find(PLACEHOLDER) {
-        Some(index) => {
-            let left_snippet = &snippet[..index];
-            let right_snippet = &snippet[index + PLACEHOLDER.len()..];
-            (left_snippet, right_snippet, false)
-        }
-        None => (snippet, "", true),
-    }
+    snippet
+        .split_once(PLACEHOLDER)
+        .map(|(left, right)| (left, right, false))
+        .unwrap_or((snippet, "", true))
 }
 
 #[test]
