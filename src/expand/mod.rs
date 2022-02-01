@@ -22,15 +22,14 @@ pub fn run(args: &ExpandArgs) {
         let evaluate = if result.evaluate { "(e)" } else { "" };
         let insert_space = if result.insert_space { "1" } else { "" };
 
-        println!(
-            r#"local lbuffer={lbuffer};local rbuffer={rbuffer};local left_snippet={left_snippet};local right_snippet={right_snippet};LBUFFER="${{lbuffer}}${{{evaluate}left_snippet}}";RBUFFER="${{{evaluate}right_snippet}}${{rbuffer}}";__zabrze_insert_space={insert_space}"#,
-            lbuffer = lbuffer,
-            rbuffer = rbuffer,
-            left_snippet = left_snippet,
-            right_snippet = right_snippet,
-            evaluate = evaluate,
-            insert_space = insert_space,
-        );
+        print!(r"local lbuffer={};", lbuffer);
+        print!(r"local rbuffer={};", rbuffer);
+        print!(r"local left_snippet={};", left_snippet);
+        print!(r"local right_snippet={};", right_snippet);
+        print!(r#"LBUFFER="${{lbuffer}}${{{evaluate}left_snippet}}";"#);
+        print!(r#"RBUFFER="${{{evaluate}right_snippet}}${{rbuffer}}";"#);
+        print!(r"__zabrze_insert_space={insert_space};");
+        print!("\n");
     }
 }
 
