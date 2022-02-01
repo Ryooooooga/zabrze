@@ -262,7 +262,7 @@ fn split_snippet(snippet: &str) -> (&str, &str, bool) {
 }
 
 #[test]
-fn test_split_sinppet() {
+fn test_split_snippet() {
     assert_eq!(split_snippet("foo bar"), ("foo bar", "", true));
     assert_eq!(split_snippet("foo{}bar"), ("foo", "bar", false));
 }
