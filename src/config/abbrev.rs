@@ -25,22 +25,22 @@ impl Abbrev {
             return false;
         }
 
-        let pattern_or_error = match self.context.as_ref().map(|ctx| Regex::new(ctx)) {
-            Some(pattern_or_error) => pattern_or_error,
-            None => return true,
-        };
-
-        match pattern_or_error {
-            Ok(pattern) => pattern.is_match(command),
-            Err(err) => {
+        let context_opt = match self.context.as_ref().map(|ctx| Regex::new(ctx)) {
+            Some(Ok(context)) => Some(context),
+            Some(Err(error)) => {
                 let name = self.name.as_ref().unwrap_or(&self.snippet);
-                let error_message = format!("invalid regex in abbrev '{}': {}", name, err);
+                let error_message = format!("invalid regex in abbrev '{}': {}", name, error);
                 let error_style = Color::Red.normal();
 
                 eprintln!("{}", error_style.paint(error_message));
-                false
+                return false;
             }
-        }
+            None => None,
+        };
+
+        context_opt
+            .map(|context| context.is_match(command))
+            .unwrap_or(true)
     }
 }
 

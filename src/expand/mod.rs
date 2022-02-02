@@ -26,9 +26,9 @@ pub fn run(args: &ExpandArgs) {
         print!(r"local rbuffer={};", rbuffer);
         print!(r"local left_snippet={};", left_snippet);
         print!(r"local right_snippet={};", right_snippet);
-        print!(r#"LBUFFER="${{lbuffer}}${{{evaluate}left_snippet}}";"#);
-        print!(r#"RBUFFER="${{{evaluate}right_snippet}}${{rbuffer}}";"#);
-        print!(r"__zabrze_has_placeholder={has_placeholder};");
+        print!(r#"LBUFFER="${{lbuffer}}${{{}left_snippet}}";"#, evaluate);
+        print!(r#"RBUFFER="${{{}right_snippet}}${{rbuffer}}";"#, evaluate);
+        print!(r"__zabrze_has_placeholder={};", has_placeholder);
         println!();
     }
 }
@@ -49,10 +49,10 @@ fn expand<'a>(args: &'a ExpandArgs, config: &'a Config) -> Option<ExpandResult<'
         .iter()
         .find(|abbr| abbr.is_match(command, last_arg))?;
 
+    let (left_snippet, right_snippet, has_placeholder) = split_snippet(&abbrev.snippet);
+
     let last_arg_index = lbuffer.len() - last_arg.len();
     let lbuffer_without_last_arg = &lbuffer[..last_arg_index];
-
-    let (left_snippet, right_snippet, has_placeholder) = split_snippet(&abbrev.snippet);
 
     Some(ExpandResult {
         lbuffer: lbuffer_without_last_arg,
