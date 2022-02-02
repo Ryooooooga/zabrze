@@ -3,10 +3,30 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
+pub enum Action {
+    #[serde(rename = "replace-last")]
+    ReplaceLast,
+    #[serde(rename = "replace-all")]
+    ReplaceAll,
+    #[serde(rename = "prepend")]
+    Prepend,
+}
+
+impl Default for Action {
+    fn default() -> Self {
+        Self::ReplaceLast
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Abbrev {
     pub name: Option<String>,
     pub abbr: String,
     pub snippet: String,
+
+    #[serde(default)]
+    pub action: Action,
+
     pub context: Option<String>,
 
     #[serde(default = "default_as_false")]
@@ -90,6 +110,10 @@ impl<'a> Match<'a> {
         }
     }
 
+    pub fn action(&self) -> &'a Action {
+        &self.abbrev.action
+    }
+
     pub fn evaluate(&self) -> bool {
         self.abbrev.evaluate
     }
@@ -128,6 +152,7 @@ mod tests {
                     name: None,
                     abbr: "test".to_string(),
                     snippet: "TEST".to_string(),
+                    action: Action::ReplaceLast,
                     context: None,
                     global: false,
                     evaluate: false,
@@ -146,6 +171,7 @@ mod tests {
                     name: None,
                     abbr: "test".to_string(),
                     snippet: "TEST".to_string(),
+                    action: Action::ReplaceLast,
                     context: None,
                     global: false,
                     evaluate: false,
@@ -160,6 +186,7 @@ mod tests {
                     name: None,
                     abbr: "test".to_string(),
                     snippet: "TEST".to_string(),
+                    action: Action::ReplaceLast,
                     context: None,
                     global: true,
                     evaluate: false,
@@ -178,6 +205,7 @@ mod tests {
                     name: None,
                     abbr: "test".to_string(),
                     snippet: "TEST".to_string(),
+                    action: Action::ReplaceLast,
                     context: Some("^echo ".to_string()),
                     global: true,
                     evaluate: false,
@@ -196,6 +224,7 @@ mod tests {
                     name: None,
                     abbr: "test".to_string(),
                     snippet: "TEST".to_string(),
+                    action: Action::ReplaceLast,
                     context: Some("^printf ".to_string()),
                     global: true,
                     evaluate: false,
@@ -210,6 +239,7 @@ mod tests {
                     name: None,
                     abbr: "test".to_string(),
                     snippet: "TEST".to_string(),
+                    action: Action::ReplaceLast,
                     context: Some("(echo".to_string()),
                     global: true,
                     evaluate: false,
@@ -224,6 +254,7 @@ mod tests {
                     name: None,
                     abbr: "test".to_string(),
                     snippet: "TE{}ST".to_string(),
+                    action: Action::ReplaceLast,
                     context: None,
                     global: false,
                     evaluate: false,

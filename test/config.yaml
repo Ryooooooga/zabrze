@@ -38,3 +38,23 @@ abbrevs:
     snippet: commit -m '{}'
     global: true
     context: ^git\s
+
+  # replace-all
+  - abbr: install
+    snippet: sudo apt install -y
+    action: replace-all
+    global: true
+    context: ^apt\s
+
+  - abbr: "["
+    snippet: "[ {} ]"
+    action: replace-all
+
+  # prepend
+  - abbr: ..
+    snippet: cd
+    action: prepend
+
+  - abbr: placeholder
+    snippet: ab{}cd
+    action: prepend

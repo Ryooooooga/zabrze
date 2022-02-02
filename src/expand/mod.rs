@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::config::{Action, Config};
 use crate::opt::ExpandArgs;
 use shell_escape::escape;
 use std::borrow::Cow;
@@ -7,28 +7,50 @@ use std::borrow::Cow;
 pub struct ExpandResult<'a> {
     pub lbuffer: &'a str,
     pub rbuffer: &'a str,
+    pub replacement: SnippetReplacement<'a>,
     pub left_snippet: &'a str,
     pub right_snippet: &'a str,
     pub evaluate: bool,
     pub has_placeholder: bool,
 }
 
+#[derive(Debug, PartialEq)]
+pub struct SnippetReplacement<'a> {
+    pub start_index: usize,
+    pub end_index: usize,
+    pub snippet_prefix: &'a str,
+    pub snippet_suffix: &'a str,
+}
+
 pub fn run(args: &ExpandArgs) {
     if let Some(result) = expand(args, &Config::load_or_exit()) {
-        let lbuffer = escape(Cow::from(result.lbuffer));
+        let snippet_start_index = result.replacement.start_index;
+        let snippet_end_index = result.replacement.end_index;
+
+        let lbuffer_pre = escape(Cow::from(&result.lbuffer[..snippet_start_index]));
+        let lbuffer_post = escape(Cow::from(&result.lbuffer[snippet_end_index..]));
+        let snippet_prefix = escape(Cow::from(result.replacement.snippet_prefix));
+        let snippet_suffix = escape(Cow::from(result.replacement.snippet_suffix));
         let left_snippet = escape(Cow::from(result.left_snippet));
         let right_snippet = escape(Cow::from(result.right_snippet));
+
         let rbuffer = escape(Cow::from(result.rbuffer));
         let evaluate = if result.evaluate { "(e)" } else { "" };
-        let has_placeholder = if result.has_placeholder { "1" } else { "" };
 
-        print!(r"local lbuffer={};", lbuffer);
-        print!(r"local rbuffer={};", rbuffer);
-        print!(r"local left_snippet={};", left_snippet);
-        print!(r"local right_snippet={};", right_snippet);
-        print!(r#"LBUFFER="${{lbuffer}}${{{}left_snippet}}";"#, evaluate);
-        print!(r#"RBUFFER="${{{}right_snippet}}${{rbuffer}}";"#, evaluate);
-        print!(r"__zabrze_has_placeholder={};", has_placeholder);
+        print!(r"local lbuffer_pre={lbuffer_pre}{snippet_prefix};");
+        print!(r"local lbuffer_post={snippet_suffix}{lbuffer_post};");
+        print!(r"local rbuffer={rbuffer};");
+        print!(r"local left_snippet={left_snippet};");
+        if result.has_placeholder {
+            print!(r"local right_snippet={right_snippet};");
+            print!(r#"LBUFFER="${{lbuffer_pre}}${{{evaluate}left_snippet}}";"#);
+            print!(r#"RBUFFER="${{{evaluate}right_snippet}}${{lbuffer_post}}${{rbuffer}}";"#);
+            print!(r"__zabrze_has_placeholder=1;");
+        } else {
+            print!(r#"LBUFFER="${{lbuffer_pre}}${{{evaluate}left_snippet}}${{lbuffer_post}}";"#);
+            print!(r#"RBUFFER="${{rbuffer}}";"#);
+            print!(r"__zabrze_has_placeholder=;");
+        }
         println!();
     }
 }
@@ -54,12 +76,42 @@ fn expand<'a>(args: &'a ExpandArgs, config: &'a Config) -> Option<ExpandResult<'
         .flat_map(|abbr| abbr.do_match(command, last_arg))
         .next()?;
 
-    let last_arg_index = lbuffer.len() - last_arg.len();
-    let lbuffer_without_last_arg = &lbuffer[..last_arg_index];
+    let replacement = match matched.action() {
+        Action::ReplaceLast => {
+            let last_arg_start_index = lbuffer.len() - last_arg.len();
+            let last_arg_end_index = lbuffer.len();
+            SnippetReplacement {
+                start_index: last_arg_start_index,
+                end_index: last_arg_end_index,
+                snippet_prefix: "",
+                snippet_suffix: "",
+            }
+        }
+        Action::ReplaceAll => {
+            let command_start_index = lbuffer.len() - command.len();
+            let command_end_index = lbuffer.len();
+            SnippetReplacement {
+                start_index: command_start_index,
+                end_index: command_end_index,
+                snippet_prefix: "",
+                snippet_suffix: "",
+            }
+        }
+        Action::Prepend => {
+            let command_start_index = lbuffer.len() - command.len();
+            SnippetReplacement {
+                start_index: command_start_index,
+                end_index: command_start_index,
+                snippet_prefix: "",
+                snippet_suffix: " ",
+            }
+        }
+    };
 
     Some(ExpandResult {
-        lbuffer: lbuffer_without_last_arg,
+        lbuffer,
         rbuffer,
+        replacement,
         left_snippet: matched.left_snippet(),
         right_snippet: matched.right_snippet(),
         evaluate: matched.evaluate(),
@@ -100,6 +152,18 @@ mod tests {
                 snippet: commit -m '{}'
                 global: true
                 context: '^git '
+
+              - name: sudo apt install -y
+                abbr: install
+                snippet: sudo apt install -y
+                action: replace-all
+                global: true
+                context: '^apt '
+
+              - name: cd ..
+                abbr: ..
+                snippet: cd
+                action: prepend
             ",
         )
         .unwrap()
@@ -128,8 +192,14 @@ mod tests {
                 lbuffer: "g",
                 rbuffer: "",
                 expected: Some(ExpandResult {
-                    lbuffer: "",
+                    lbuffer: "g",
                     rbuffer: "",
+                    replacement: SnippetReplacement {
+                        start_index: 0,
+                        end_index: 1,
+                        snippet_prefix: "",
+                        snippet_suffix: "",
+                    },
                     left_snippet: "git",
                     right_snippet: "",
                     evaluate: false,
@@ -141,8 +211,14 @@ mod tests {
                 lbuffer: "g",
                 rbuffer: " --pager=never",
                 expected: Some(ExpandResult {
-                    lbuffer: "",
+                    lbuffer: "g",
                     rbuffer: " --pager=never",
+                    replacement: SnippetReplacement {
+                        start_index: 0,
+                        end_index: 1,
+                        snippet_prefix: "",
+                        snippet_suffix: "",
+                    },
                     left_snippet: "git",
                     right_snippet: "",
                     evaluate: false,
@@ -154,8 +230,14 @@ mod tests {
                 lbuffer: "echo hello; g",
                 rbuffer: "",
                 expected: Some(ExpandResult {
-                    lbuffer: "echo hello; ",
+                    lbuffer: "echo hello; g",
                     rbuffer: "",
+                    replacement: SnippetReplacement {
+                        start_index: 12,
+                        end_index: 13,
+                        snippet_prefix: "",
+                        snippet_suffix: "",
+                    },
                     left_snippet: "git",
                     right_snippet: "",
                     evaluate: false,
@@ -167,8 +249,14 @@ mod tests {
                 lbuffer: "echo hello null",
                 rbuffer: "",
                 expected: Some(ExpandResult {
-                    lbuffer: "echo hello ",
+                    lbuffer: "echo hello null",
                     rbuffer: "",
+                    replacement: SnippetReplacement {
+                        start_index: 11,
+                        end_index: 15,
+                        snippet_prefix: "",
+                        snippet_suffix: "",
+                    },
                     left_snippet: ">/dev/null",
                     right_snippet: "",
                     evaluate: false,
@@ -180,8 +268,14 @@ mod tests {
                 lbuffer: "echo hello; git c",
                 rbuffer: " -m hello",
                 expected: Some(ExpandResult {
-                    lbuffer: "echo hello; git ",
+                    lbuffer: "echo hello; git c",
                     rbuffer: " -m hello",
+                    replacement: SnippetReplacement {
+                        start_index: 16,
+                        end_index: 17,
+                        snippet_prefix: "",
+                        snippet_suffix: "",
+                    },
                     left_snippet: "commit",
                     right_snippet: "",
                     evaluate: false,
@@ -205,8 +299,14 @@ mod tests {
                 lbuffer: "home",
                 rbuffer: "",
                 expected: Some(ExpandResult {
-                    lbuffer: "",
+                    lbuffer: "home",
                     rbuffer: "",
+                    replacement: SnippetReplacement {
+                        start_index: 0,
+                        end_index: 4,
+                        snippet_prefix: "",
+                        snippet_suffix: "",
+                    },
                     left_snippet: "$HOME",
                     right_snippet: "",
                     evaluate: true,
@@ -218,12 +318,75 @@ mod tests {
                 lbuffer: "git cm",
                 rbuffer: "",
                 expected: Some(ExpandResult {
-                    lbuffer: "git ",
+                    lbuffer: "git cm",
                     rbuffer: "",
+                    replacement: SnippetReplacement {
+                        start_index: 4,
+                        end_index: 6,
+                        snippet_prefix: "",
+                        snippet_suffix: "",
+                    },
                     left_snippet: "commit -m '",
                     right_snippet: "'",
                     evaluate: false,
                     has_placeholder: true,
+                }),
+            },
+            Scenario {
+                testname: "replace-all action",
+                lbuffer: "apt install",
+                rbuffer: "",
+                expected: Some(ExpandResult {
+                    lbuffer: "apt install",
+                    rbuffer: "",
+                    replacement: SnippetReplacement {
+                        start_index: 0,
+                        end_index: 11,
+                        snippet_prefix: "",
+                        snippet_suffix: "",
+                    },
+                    left_snippet: "sudo apt install -y",
+                    right_snippet: "",
+                    evaluate: false,
+                    has_placeholder: false,
+                }),
+            },
+            Scenario {
+                testname: "prepend action",
+                lbuffer: "..",
+                rbuffer: "",
+                expected: Some(ExpandResult {
+                    lbuffer: "..",
+                    rbuffer: "",
+                    replacement: SnippetReplacement {
+                        start_index: 0,
+                        end_index: 0,
+                        snippet_prefix: "",
+                        snippet_suffix: " ",
+                    },
+                    left_snippet: "cd",
+                    right_snippet: "",
+                    evaluate: false,
+                    has_placeholder: false,
+                }),
+            },
+            Scenario {
+                testname: "prepend action 2",
+                lbuffer: "pwd; ..",
+                rbuffer: "",
+                expected: Some(ExpandResult {
+                    lbuffer: "pwd; ..",
+                    rbuffer: "",
+                    replacement: SnippetReplacement {
+                        start_index: 5,
+                        end_index: 5,
+                        snippet_prefix: "",
+                        snippet_suffix: " ",
+                    },
+                    left_snippet: "cd",
+                    right_snippet: "",
+                    evaluate: false,
+                    has_placeholder: false,
                 }),
             },
         ];

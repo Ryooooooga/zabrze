@@ -43,21 +43,27 @@ try() {
 export ZABRZE_CONFIG_FILE="${0:a:h}/config.yaml"
 export EDITOR=vim
 
-#   lbuffer         rbuffer LBUFFER                         RBUFFER     placeholder
-try "g"             ""      "git"                           ""          ""
-try "g"             "add"   "git"                           "add"       ""
-try "g"             " add"  "git"                           " add"      ""
-try "echo g"        ""      "echo g"                        ""          ""
-try "echo a; g"     ""      "echo a; git"                   ""          ""
-try "cat a | .1"    ""      "cat a | awk '{ print \$1 }'"   ""          ""
-try "view"          "a.txt" "vim -R"                        "a.txt"     ""
-try "echo ANSWER"   ""      "echo answer is 42"             ""          ""
-try "ANSWER"        ""      "answer is 42"                  ""          ""
-try "git aa"        ""      "git add -vA"                   ""          ""
-try "echo git aa"   ""      "echo git aa"                   ""          ""
-try "git -f"        ""      "git -f"                        ""          ""
-try "git push -f"   ""      "git push --force-with-lease"   ""          ""
-try "git cm"        ""      "git commit -m '"               "'"         "1"
+#   lbuffer         rbuffer     LBUFFER                         RBUFFER         placeholder
+try "g"             ""          "git"                           ""              ""
+try "  g"           ""          "  git"                         ""              ""
+try "g"             "add"       "git"                           "add"           ""
+try "g"             " add"      "git"                           " add"          ""
+try "echo g"        ""          "echo g"                        ""              ""
+try "echo a; g"     ""          "echo a; git"                   ""              ""
+try "cat a | .1"    ""          "cat a | awk '{ print \$1 }'"   ""              ""
+try "view"          "a.txt"     "vim -R"                        "a.txt"         ""
+try "echo ANSWER"   ""          "echo answer is 42"             ""              ""
+try "ANSWER"        ""          "answer is 42"                  ""              ""
+try "git aa"        ""          "git add -vA"                   ""              ""
+try "echo git aa"   ""          "echo git aa"                   ""              ""
+try "git -f"        ""          "git -f"                        ""              ""
+try "git push -f"   ""          "git push --force-with-lease"   ""              ""
+try "git cm"        ""          "git commit -m '"               "'"             "1"
+try "git cm"        " -v"       "git commit -m '"               "' -v"          "1"
+try "apt install"   "zsh"       "sudo apt install -y"           "zsh"           ""
+try "["             ""          "[ "                            " ]"            "1"
+try ".."            ""          "cd .."                         ""              ""
+try "; placeholder" ""          "; ab"                          "cd placeholder" "1"
 
 if [ "$result" -ne 0 ]; then
     echo "test failed!!" >/dev/stderr
