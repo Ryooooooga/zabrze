@@ -44,12 +44,15 @@ fn expand<'a>(args: &'a ExpandArgs, config: &'a Config) -> Option<ExpandResult<'
         .rsplit_once(char::is_whitespace)
         .unwrap_or(("", command));
 
-    let abbrev = config
+    if last_arg.is_empty() {
+        return None;
+    }
+
+    let matched = config
         .abbrevs
         .iter()
-        .find(|abbr| abbr.is_match(command, last_arg))?;
-
-    let (left_snippet, right_snippet, has_placeholder) = split_snippet(&abbrev.snippet);
+        .flat_map(|abbr| abbr.do_match(command, last_arg))
+        .next()?;
 
     let last_arg_index = lbuffer.len() - last_arg.len();
     let lbuffer_without_last_arg = &lbuffer[..last_arg_index];
@@ -57,10 +60,10 @@ fn expand<'a>(args: &'a ExpandArgs, config: &'a Config) -> Option<ExpandResult<'
     Some(ExpandResult {
         lbuffer: lbuffer_without_last_arg,
         rbuffer,
-        left_snippet,
-        right_snippet,
-        evaluate: abbrev.evaluate,
-        has_placeholder,
+        left_snippet: matched.left_snippet(),
+        right_snippet: matched.right_snippet(),
+        evaluate: matched.evaluate(),
+        has_placeholder: matched.has_placeholder(),
     })
 }
 
@@ -250,18 +253,4 @@ fn test_find_last_command_index() {
     assert_eq!(find_last_command_index("echo hello; git commit"), 11);
     assert_eq!(find_last_command_index("echo hello && git commit"), 13);
     assert_eq!(find_last_command_index("seq 10 | tail -3 | cat"), 18);
-}
-
-fn split_snippet(snippet: &str) -> (&str, &str, bool) {
-    const PLACEHOLDER: &str = "{}";
-    snippet
-        .split_once(PLACEHOLDER)
-        .map(|(left, right)| (left, right, true))
-        .unwrap_or((snippet, "", false))
-}
-
-#[test]
-fn test_split_snippet() {
-    assert_eq!(split_snippet("foo bar"), ("foo bar", "", false));
-    assert_eq!(split_snippet("foo{}bar"), ("foo", "bar", true));
 }
