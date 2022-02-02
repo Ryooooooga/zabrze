@@ -1,0 +1,40 @@
+abbrevs:
+  # simple
+  - abbr: g
+    snippet: git
+
+  - abbr: .1
+    snippet: awk '{ print $1 }'
+
+  # global
+  - abbr: ">null"
+    snippet: ">/dev/null 2>&1"
+    global: true
+
+  # evaluate
+  - abbr: view
+    snippet: ${EDITOR} -R
+    evaluate: true
+
+  # global+evaluate
+  - abbr: ANSWER
+    snippet: answer is $(echo $((6*7)))
+    evaluate: true
+    global: true
+
+  # global+context
+  - abbr: aa
+    snippet: add -vA
+    global: true
+    context: ^git\s
+
+  - abbr: -f
+    snippet: --force-with-lease
+    global: true
+    context: ^git(\s+\S+)*\s+push\s
+
+  # global+placeholder
+  - abbr: cm
+    snippet: commit -m '{}'
+    global: true
+    context: ^git\s
