@@ -7,33 +7,18 @@ ZSH abbreviation expansion plugin
 
 ## Usage
 
+### Simple abbreviation
+
 ```yaml
 # ~/.config/zabrze/config.yaml
 abbrevs:
-  # abbrev alias
   - name: git
     abbr: g
     snippet: git
 
-  # global abbrev
-  - name: '>/dev/null'
-    abbr: 'null'
-    snippets: '>/dev/null'
-    global: true
-
-  # global abbrev with context
-  - name: git commit -m
-    abbr: cm
-    snippet: commit -m
-    global: true
-    context: '^git\s'
-
-  - name: branch name
-    abbr: B
-    snippet: $(git symbolic-ref --short HEAD)
-    evaluate: true
-    global: true
-    context: '^git\s'
+  - name: awk '{print $1}'
+    abbr: '.1'
+    snippet: awk '{print $1}'
 ```
 
 ```zsh
@@ -47,9 +32,69 @@ $ g<SP>cm<SP>
 #  ↓ expanded
 $ git commit -m 
 
-$ git show B<CR>
+$ cat a.txt | .1<CR>
+#  ↓ expanded and executed
+$ cat a.txt | awk '{print $1}'
+```
+
+### Global abbreviation
+
+```yaml
+abbrevs:
+  - name: '>/dev/null'
+    abbr: 'null'
+    snippets: '>/dev/null 2>&1'
+    global: true
+```
+
+```zsh
+$ echo a null<SP>
 #  ↓ expanded
-$ git show main
+$ echo a >/dev/null 2>&1
+```
+
+### Global abbreviation with context
+
+```yaml
+abbrevs:
+  - name: git commit
+    abbr: c
+    snippet: commit
+    global: true
+    context: '^git\s'
+
+  - name: branch name
+    abbr: B
+    snippet: $(git symbolic-ref --short HEAD)
+    evaluate: true
+    global: true
+    context: '^git\s'
+```
+
+```zsh
+$ git c<SP>
+#  ↓ expanded
+$ git commit
+
+$ git push -d origin B<CR>
+#  ↓ expanded and executed
+$ git push -d origin main
+```
+
+### Suffix alias
+
+```yaml
+abbrevs:
+  - name: python3 *.py
+    abbr-pattern: \.py$
+    snippet: python3
+    action: prepend
+```
+
+```zsh
+$ ./a.py<CR>
+#  ↓ expanded and executed
+$ python3 ./a.py
 ```
 
 ## Installation
