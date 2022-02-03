@@ -138,7 +138,7 @@ mod tests {
                 context: '^git '
 
               - name: '>/dev/null'
-                abbr: null
+                abbr: 'null'
                 snippet: '>/dev/null'
                 global: true
 

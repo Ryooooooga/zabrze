@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::config::{Config, Trigger};
 use crate::opt::ListArgs;
 use shell_escape::escape;
 use std::borrow::Cow;
@@ -10,7 +10,10 @@ pub fn run(args: &ListArgs) {
 
 fn list<W: io::Write>(_args: &ListArgs, config: &Config, out: &mut W) -> Result<(), io::Error> {
     for abbrev in &config.abbrevs {
-        let abbr = &abbrev.abbr;
+        let abbr = match &abbrev.trigger {
+            Trigger::Abbr(abbr) => abbr,
+            Trigger::Regex(regex) => regex,
+        };
         let snippet = escape(Cow::from(&abbrev.snippet));
 
         writeln!(out, "{}={}", abbr, snippet)?;
@@ -38,7 +41,7 @@ mod tests {
                 context: '^git '
 
               - name: '>/dev/null'
-                abbr: null
+                abbr: 'null'
                 snippet: '>/dev/null'
                 global: true
 
@@ -46,6 +49,11 @@ mod tests {
                 abbr: home
                 snippet: $HOME
                 evaluate: true
+
+              - name: ..
+                abbr: ^\.\.(/\.\.)*$
+                snippet: cd
+                action: prepend
             ",
         )
         .unwrap()
@@ -65,6 +73,7 @@ mod tests {
 c=commit
 null='>/dev/null'
 home='$HOME'
+^\.\.(/\.\.)*$=cd
 ";
 
         assert_eq!(output, expected);

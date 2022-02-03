@@ -63,7 +63,11 @@ try "git cm"        " -v"       "git commit -m '"               "' -v"          
 try "apt install"   "zsh"       "sudo apt install -y"           "zsh"           ""
 try "["             ""          "[ "                            " ]"            "1"
 try ".."            ""          "cd .."                         ""              ""
+try "../.."         ""          "cd ../.."                      ""              ""
+try "../../.."      ""          "cd ../../.."                   ""              ""
 try "; placeholder" ""          "; ab"                          "cd placeholder" "1"
+try "yes | ./a.ts"  ""          "yes | deno run ./a.ts"         ""              ""
+try "yes | ./ab.ts" ""          "yes | deno run ./ab.ts"        ""              ""
 
 if [ "$result" -ne 0 ]; then
     echo "test failed!!" >/dev/stderr

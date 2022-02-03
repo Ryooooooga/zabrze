@@ -3,7 +3,7 @@ abbrevs:
   - abbr: g
     snippet: git
 
-  - abbr: .1
+  - abbr: ".1"
     snippet: awk '{ print $1 }'
 
   # global
@@ -51,10 +51,15 @@ abbrevs:
     action: replace-all
 
   # prepend
-  - abbr: ..
+  - abbr-pattern: ^\.\.(/\.\.)*/?$
     snippet: cd
     action: prepend
 
   - abbr: placeholder
     snippet: ab{}cd
+    action: prepend
+
+  # suffix aliases
+  - abbr-pattern: \.ts$
+    snippet: deno run
     action: prepend

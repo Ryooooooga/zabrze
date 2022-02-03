@@ -17,7 +17,7 @@ abbrevs:
 
   # global abbrev
   - name: '>/dev/null'
-    abbr: null
+    abbr: 'null'
     snippets: '>/dev/null'
     global: true
 

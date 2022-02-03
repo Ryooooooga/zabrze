@@ -3,6 +3,14 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
+pub enum Trigger {
+    #[serde(rename = "abbr")]
+    Abbr(String),
+    #[serde(rename = "abbr-pattern")]
+    Regex(String),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Action {
     #[serde(rename = "replace-last")]
     ReplaceLast,
@@ -21,7 +29,10 @@ impl Default for Action {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Abbrev {
     pub name: Option<String>,
-    pub abbr: String,
+
+    #[serde(flatten)]
+    pub trigger: Trigger,
+
     pub snippet: String,
 
     #[serde(default)]
@@ -38,11 +49,35 @@ pub struct Abbrev {
 
 impl Abbrev {
     pub fn do_match(&self, command: &str, last_arg: &str) -> Option<Match> {
-        if self.abbr != last_arg {
-            return None;
-        }
         if !(self.global || command == last_arg) {
             return None;
+        }
+
+        // Check trigger pattern
+        match &self.trigger {
+            Trigger::Abbr(abbr) => {
+                if abbr != last_arg {
+                    return None;
+                }
+            }
+            Trigger::Regex(regex) => {
+                let pattern = match Regex::new(regex) {
+                    Ok(pattern) => pattern,
+                    Err(error) => {
+                        let name = self.name.as_ref().unwrap_or(&self.snippet);
+                        let error_message =
+                            format!("invalid regex in abbrev '{}': {}", name, error);
+                        let error_style = Color::Red.normal();
+
+                        eprintln!("{}", error_style.paint(error_message));
+                        return None;
+                    }
+                };
+
+                if !pattern.is_match(last_arg) {
+                    return None;
+                }
+            }
         }
 
         // Check context
@@ -150,7 +185,7 @@ mod tests {
                 testname: "should match non-global if first arg",
                 abbr: Abbrev {
                     name: None,
-                    abbr: "test".to_string(),
+                    trigger: Trigger::Abbr("test".to_string()),
                     snippet: "TEST".to_string(),
                     action: Action::ReplaceLast,
                     context: None,
@@ -169,7 +204,7 @@ mod tests {
                 testname: "should not match non-global if second arg",
                 abbr: Abbrev {
                     name: None,
-                    abbr: "test".to_string(),
+                    trigger: Trigger::Abbr("test".to_string()),
                     snippet: "TEST".to_string(),
                     action: Action::ReplaceLast,
                     context: None,
@@ -184,7 +219,7 @@ mod tests {
                 testname: "should match global",
                 abbr: Abbrev {
                     name: None,
-                    abbr: "test".to_string(),
+                    trigger: Trigger::Abbr("test".to_string()),
                     snippet: "TEST".to_string(),
                     action: Action::ReplaceLast,
                     context: None,
@@ -203,7 +238,7 @@ mod tests {
                 testname: "should match global with context",
                 abbr: Abbrev {
                     name: None,
-                    abbr: "test".to_string(),
+                    trigger: Trigger::Abbr("test".to_string()),
                     snippet: "TEST".to_string(),
                     action: Action::ReplaceLast,
                     context: Some("^echo ".to_string()),
@@ -222,7 +257,7 @@ mod tests {
                 testname: "should not match global with context",
                 abbr: Abbrev {
                     name: None,
-                    abbr: "test".to_string(),
+                    trigger: Trigger::Abbr("test".to_string()),
                     snippet: "TEST".to_string(),
                     action: Action::ReplaceLast,
                     context: Some("^printf ".to_string()),
@@ -237,7 +272,7 @@ mod tests {
                 testname: "should not match if context is invalid",
                 abbr: Abbrev {
                     name: None,
-                    abbr: "test".to_string(),
+                    trigger: Trigger::Abbr("test".to_string()),
                     snippet: "TEST".to_string(),
                     action: Action::ReplaceLast,
                     context: Some("(echo".to_string()),
@@ -252,7 +287,7 @@ mod tests {
                 testname: "should match with placeholder",
                 abbr: Abbrev {
                     name: None,
-                    abbr: "test".to_string(),
+                    trigger: Trigger::Abbr("test".to_string()),
                     snippet: "TE{}ST".to_string(),
                     action: Action::ReplaceLast,
                     context: None,
@@ -265,6 +300,25 @@ mod tests {
                     left: "TE",
                     right: "ST",
                     has_placeholder: true,
+                }),
+            },
+            Scenario {
+                testname: "should match abbrev-pattern",
+                abbr: Abbrev {
+                    name: None,
+                    trigger: Trigger::Regex(r"\.py$".to_string()),
+                    snippet: "python3".to_string(),
+                    action: Action::Prepend,
+                    context: None,
+                    global: false,
+                    evaluate: false,
+                },
+                command: "test.py",
+                last_arg: "test.py",
+                expected: Some(TestMatch {
+                    left: "python3",
+                    right: "",
+                    has_placeholder: false,
                 }),
             },
         ];
