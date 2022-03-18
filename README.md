@@ -103,7 +103,7 @@ $ python3 ./a.py
 
 You can download a binary release [here](https://github.com/Ryooooooga/zabrze/releases).
 
-## zinit
+### zinit
 
 ```zsh
 zinit blockf light-mode as"program" from"gh-r" for \
@@ -111,10 +111,16 @@ zinit blockf light-mode as"program" from"gh-r" for \
     Ryooooooga/zabrze
 ```
 
-## Cargo
+### Cargo
 
 ```zsh
 $ cargo install zabrze
+```
+
+### Homebrew
+
+```zsh
+$ brew install ryooooooga/tap/zabrze
 ```
 
 ## Alternatives
