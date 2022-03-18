@@ -46,7 +46,7 @@ jobs:
           export PATH="$PWD/target/debug:$PATH"
           ./test/integration_test.zsh
 
-  release:
+  release-build:
     strategy:
       fail-fast: false
       matrix:
@@ -62,7 +62,7 @@ jobs:
           - target: x86_64-pc-windows-gnu
             os: ubuntu-latest
 
-    name: Release - ${{ matrix.target }}
+    name: Release build - ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     needs: [lint, build]
     if: startsWith(github.ref, 'refs/tags/')
@@ -74,13 +74,17 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable-${{ matrix.target }}
+          toolchain: stable
           default: true
 
       - name: Build
-        run: cargo build --release
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --target=${{ matrix.target }}
+          use-cross: true
 
-      - name: Rename an asset
+      - name: Archive an executable
         id: asset
         run: |
           EXE=
@@ -90,9 +94,10 @@ jobs:
             ARCHIVE=.zip
           fi
 
-          EXECUTABLE="${GITHUB_REPOSITORY#*/}${EXE}"
-          ASSET="${GITHUB_REPOSITORY#*/}-${GITHUB_REF#refs/tags/}-${{ matrix.target }}${ARCHIVE}"
-          mv "./target/release/${EXECUTABLE}" "./${EXECUTABLE}"
+          NAME="${GITHUB_REPOSITORY#*/}"
+          EXECUTABLE="${NAME}${EXE}"
+          ASSET="${NAME}${ARCHIVE}"
+          mv "./target/${{ matrix.target }}/release/${EXECUTABLE}" "./${EXECUTABLE}"
 
           if [[ "${ARCHIVE}" = ".tar.gz" ]]; then
             tar czfv "./${ASSET}" "${EXECUTABLE}"
@@ -102,10 +107,51 @@ jobs:
           echo "::set-output name=asset::${ASSET}"
         shell: bash
 
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifact-${{ matrix.target }}
+          path: ${{ steps.asset.outputs.asset }}
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [release-build]
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Rename assets
+        id: asset
+        run: |
+          NAME=${GITHUB_REPOSITORY#*/}
+          TAG=${GITHUB_REF#refs/tags/}
+
+          mv "artifact-x86_64-apple-darwin/${NAME}.tar.gz" "./${NAME}-${TAG}-x86_64-apple-darwin.tar.gz"
+          mv "artifact-x86_64-unknown-linux-gnu/${NAME}.tar.gz" "./${NAME}-${TAG}-x86_64-unknown-linux-gnu.tar.gz"
+          mv "artifact-x86_64-pc-windows-gnu/${NAME}.zip" "./${NAME}-${TAG}-x86_64-pc-windows-gnu.zip"
+
+          echo "::set-output name=asset-x86_64-apple-darwin::${NAME}-${TAG}-x86_64-apple-darwin.tar.gz"
+          echo "::set-output name=asset-x86_64-unknown-linux-gnu::${NAME}-${TAG}-x86_64-unknown-linux-gnu.tar.gz"
+          echo "::set-output name=asset-x86_64-pc-windows-gnu::${NAME}-${TAG}-x86_64-pc-windows-gnu.zip"
+
+      - name: Checksum
+        run: >
+          sha256sum
+          ${{ steps.asset.outputs.asset-x86_64-apple-darwin }}
+          ${{ steps.asset.outputs.asset-x86_64-unknown-linux-gnu }}
+          ${{ steps.asset.outputs.asset-x86_64-pc-windows-gnu }}
+          | tee checksum.txt
+
       - name: Upload
         uses: softprops/action-gh-release@v1
         with:
-          files: ${{ steps.asset.outputs.asset }}
+          files: |
+            checksum.txt
+            ${{ steps.asset.outputs.asset-x86_64-apple-darwin }}
+            ${{ steps.asset.outputs.asset-x86_64-unknown-linux-gnu }}
+            ${{ steps.asset.outputs.asset-x86_64-pc-windows-gnu }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
