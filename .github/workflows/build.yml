@@ -53,10 +53,13 @@ jobs:
         target:
           - x86_64-apple-darwin
           - x86_64-unknown-linux-gnu
+          - x86_64-pc-windows-gnu
         include:
           - target: x86_64-apple-darwin
             os: macOS-latest
           - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-pc-windows-gnu
             os: ubuntu-latest
 
     name: Release - ${{ matrix.target }}
@@ -80,10 +83,22 @@ jobs:
       - name: Rename an asset
         id: asset
         run: |
-          EXECUTABLE="${GITHUB_REPOSITORY#*/}"
-          ASSET="${EXECUTABLE}-${GITHUB_REF#refs/tags/}-${{ matrix.target }}.tar.gz"
+          EXE=
+          ARCHIVE=.tar.gz
+          if ${{ contains(matrix.target, 'pc-windows') }}; then
+            EXE=.exe
+            ARCHIVE=.zip
+          fi
+
+          EXECUTABLE="${GITHUB_REPOSITORY#*/}${EXE}"
+          ASSET="${GITHUB_REPOSITORY#*/}-${GITHUB_REF#refs/tags/}-${{ matrix.target }}${ARCHIVE}"
           mv "./target/release/${EXECUTABLE}" "./${EXECUTABLE}"
-          tar czfv "./${ASSET}" "${EXECUTABLE}"
+
+          if [[ "${ARCHIVE}" = ".tar.gz" ]]; then
+            tar czfv "./${ASSET}" "${EXECUTABLE}"
+          else
+            zip "./${ASSET}" "${EXECUTABLE}"
+          fi
           echo "::set-output name=asset::${ASSET}"
         shell: bash
 
