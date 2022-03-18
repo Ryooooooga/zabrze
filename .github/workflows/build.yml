@@ -119,6 +119,12 @@ jobs:
     needs: [release-build]
 
     steps:
+      - name: Checkout tap
+        uses: actions/checkout@v3
+        with:
+          repository: 'Ryooooooga/homebrew-tap'
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
+
       - name: Download artifacts
         uses: actions/download-artifact@v3
 
@@ -143,6 +149,33 @@ jobs:
           ${{ steps.asset.outputs.asset-x86_64-unknown-linux-gnu }}
           ${{ steps.asset.outputs.asset-x86_64-pc-windows-gnu }}
           | tee checksum.txt
+
+      - name: Update tap
+        run: >
+          name="Zabrze"
+          bin="zabrze"
+          desc="ZSH abbreviation expansion plugin"
+          homepage="https://github.com/${{ github.repository }}"
+          repo="https://github.com/${{ github.repository }}"
+          tag="${GITHUB_REF#refs/tags/}"
+          version="${tag#v}"
+          x86_64_darwin="${{ steps.asset.outputs.asset-x86_64-apple-darwin }}"
+          x86_64_darwin_sha256="$(sha256sum "${{ steps.asset.outputs.asset-x86_64-apple-darwin }}" | awk '{ print $1 }')"
+          x86_64_linux="${{ steps.asset.outputs.asset-x86_64-unknown-linux-gnu }}"
+          x86_64_linux_sha256="$(sha256sum "${{ steps.asset.outputs.asset-x86_64-unknown-linux-gnu }}" | awk '{ print $1 }')"
+          envsubst <formula.rb.tmpl >zabrze.rb
+
+      - name: Push tap
+        uses: dmnemec/copy_file_to_another_repo_action@v1.1.1
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.GH_ACCESS_TOKEN }}
+        with:
+          source_file: zabrze.rb
+          destination_repo: Ryooooooga/homebrew-tap
+          destination_folder: Formula
+          user_email: ryooooooga+bot@users.noreply.github.com
+          user_name: tap-bot
+          commit_message: brew formula update for zabrze
 
       - name: Upload
         uses: softprops/action-gh-release@v1
