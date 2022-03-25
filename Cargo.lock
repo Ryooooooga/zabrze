@@ -415,7 +415,7 @@ dependencies = [
 
 [[package]]
 name = "zabrze"
-version = "0.1.6+1"
+version = "0.1.6+2"
 dependencies = [
  "ansi_term",
  "dirs",
