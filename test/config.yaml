@@ -63,3 +63,12 @@ abbrevs:
   - abbr-pattern: \.ts$
     snippet: deno run
     action: prepend
+
+  # conditional
+  - abbr: cond
+    snippet: conditional abbrev
+    if: '[[ $ZABRZE_TEST = 1 ]]'
+
+  - abbr: cond2
+    snippet: conditional abbrev
+    if: '[[ $ZABRZE_TEST = 0 ]]'
