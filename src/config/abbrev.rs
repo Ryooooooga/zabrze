@@ -40,6 +40,9 @@ pub struct Abbrev {
 
     pub context: Option<String>,
 
+    #[serde(rename = "if")]
+    pub condition: Option<String>,
+
     #[serde(default = "default_as_false")]
     pub global: bool,
 
@@ -149,6 +152,10 @@ impl<'a> Match<'a> {
         &self.abbrev.action
     }
 
+    pub fn condition(&self) -> Option<&'a str> {
+        self.abbrev.condition.as_deref()
+    }
+
     pub fn evaluate(&self) -> bool {
         self.abbrev.evaluate
     }
@@ -189,6 +196,7 @@ mod tests {
                     snippet: "TEST".to_string(),
                     action: Action::ReplaceLast,
                     context: None,
+                    condition: None,
                     global: false,
                     evaluate: false,
                 },
@@ -208,6 +216,7 @@ mod tests {
                     snippet: "TEST".to_string(),
                     action: Action::ReplaceLast,
                     context: None,
+                    condition: None,
                     global: false,
                     evaluate: false,
                 },
@@ -223,6 +232,7 @@ mod tests {
                     snippet: "TEST".to_string(),
                     action: Action::ReplaceLast,
                     context: None,
+                    condition: None,
                     global: true,
                     evaluate: false,
                 },
@@ -242,6 +252,7 @@ mod tests {
                     snippet: "TEST".to_string(),
                     action: Action::ReplaceLast,
                     context: Some("^echo ".to_string()),
+                    condition: None,
                     global: true,
                     evaluate: false,
                 },
@@ -261,6 +272,7 @@ mod tests {
                     snippet: "TEST".to_string(),
                     action: Action::ReplaceLast,
                     context: Some("^printf ".to_string()),
+                    condition: None,
                     global: true,
                     evaluate: false,
                 },
@@ -276,6 +288,7 @@ mod tests {
                     snippet: "TEST".to_string(),
                     action: Action::ReplaceLast,
                     context: Some("(echo".to_string()),
+                    condition: None,
                     global: true,
                     evaluate: false,
                 },
@@ -291,6 +304,7 @@ mod tests {
                     snippet: "TE{}ST".to_string(),
                     action: Action::ReplaceLast,
                     context: None,
+                    condition: None,
                     global: false,
                     evaluate: false,
                 },
@@ -310,6 +324,7 @@ mod tests {
                     snippet: "python3".to_string(),
                     action: Action::Prepend,
                     context: None,
+                    condition: None,
                     global: false,
                     evaluate: false,
                 },

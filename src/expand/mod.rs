@@ -10,6 +10,7 @@ pub struct ExpandResult<'a> {
     pub replacement: SnippetReplacement<'a>,
     pub left_snippet: &'a str,
     pub right_snippet: &'a str,
+    pub condition: Option<&'a str>,
     pub evaluate: bool,
     pub has_placeholder: bool,
 }
@@ -37,6 +38,11 @@ pub fn run(args: &ExpandArgs) {
         let rbuffer = escape(Cow::from(result.rbuffer));
         let evaluate = if result.evaluate { "(e)" } else { "" };
 
+        if let Some(condition) = result.condition {
+            let condition = escape(Cow::from(condition));
+            print!(r#"if eval {condition};then "#);
+        }
+
         print!(r"local lbuffer_pre={lbuffer_pre}{snippet_prefix};");
         print!(r"local lbuffer_post={snippet_suffix}{lbuffer_post};");
         print!(r"local rbuffer={rbuffer};");
@@ -51,6 +57,11 @@ pub fn run(args: &ExpandArgs) {
             print!(r#"RBUFFER="${{rbuffer}}";"#);
             print!(r"__zabrze_has_placeholder=;");
         }
+
+        if result.condition.is_some() {
+            print!(r"fi");
+        }
+
         println!();
     }
 }
@@ -114,6 +125,7 @@ fn expand<'a>(args: &'a ExpandArgs, config: &'a Config) -> Option<ExpandResult<'
         replacement,
         left_snippet: matched.left_snippet(),
         right_snippet: matched.right_snippet(),
+        condition: matched.condition(),
         evaluate: matched.evaluate(),
         has_placeholder: matched.has_placeholder(),
     })
@@ -159,6 +171,7 @@ mod tests {
                 action: replace-all
                 global: true
                 context: '^apt '
+                if: (( ${+commands[apt]} ))
 
               - name: cd ..
                 abbr: ..
@@ -202,6 +215,7 @@ mod tests {
                     },
                     left_snippet: "git",
                     right_snippet: "",
+                    condition: None,
                     evaluate: false,
                     has_placeholder: false,
                 }),
@@ -221,6 +235,7 @@ mod tests {
                     },
                     left_snippet: "git",
                     right_snippet: "",
+                    condition: None,
                     evaluate: false,
                     has_placeholder: false,
                 }),
@@ -240,6 +255,7 @@ mod tests {
                     },
                     left_snippet: "git",
                     right_snippet: "",
+                    condition: None,
                     evaluate: false,
                     has_placeholder: false,
                 }),
@@ -259,6 +275,7 @@ mod tests {
                     },
                     left_snippet: ">/dev/null",
                     right_snippet: "",
+                    condition: None,
                     evaluate: false,
                     has_placeholder: false,
                 }),
@@ -278,6 +295,7 @@ mod tests {
                     },
                     left_snippet: "commit",
                     right_snippet: "",
+                    condition: None,
                     evaluate: false,
                     has_placeholder: false,
                 }),
@@ -309,6 +327,7 @@ mod tests {
                     },
                     left_snippet: "$HOME",
                     right_snippet: "",
+                    condition: None,
                     evaluate: true,
                     has_placeholder: false,
                 }),
@@ -328,6 +347,7 @@ mod tests {
                     },
                     left_snippet: "commit -m '",
                     right_snippet: "'",
+                    condition: None,
                     evaluate: false,
                     has_placeholder: true,
                 }),
@@ -347,6 +367,7 @@ mod tests {
                     },
                     left_snippet: "sudo apt install -y",
                     right_snippet: "",
+                    condition: Some("(( ${+commands[apt]} ))"),
                     evaluate: false,
                     has_placeholder: false,
                 }),
@@ -366,6 +387,7 @@ mod tests {
                     },
                     left_snippet: "cd",
                     right_snippet: "",
+                    condition: None,
                     evaluate: false,
                     has_placeholder: false,
                 }),
@@ -385,6 +407,7 @@ mod tests {
                     },
                     left_snippet: "cd",
                     right_snippet: "",
+                    condition: None,
                     evaluate: false,
                     has_placeholder: false,
                 }),

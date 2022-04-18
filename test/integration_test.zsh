@@ -41,6 +41,7 @@ try() {
 }
 
 export ZABRZE_CONFIG_FILE="${0:a:h}/config.yaml"
+export ZABRZE_TEST=1
 export EDITOR=vim
 
 #   lbuffer         rbuffer     LBUFFER                         RBUFFER         placeholder
@@ -68,6 +69,8 @@ try "../../.."      ""          "cd ../../.."                   ""              
 try "; placeholder" ""          "; ab"                          "cd placeholder" "1"
 try "yes | ./a.ts"  ""          "yes | deno run ./a.ts"         ""              ""
 try "yes | ./ab.ts" ""          "yes | deno run ./ab.ts"        ""              ""
+try "cond"          ""          "conditional abbrev"            ""              ""
+try "cond2"         ""          "cond2"                         ""              ""
 
 if [ "$result" -ne 0 ]; then
     echo "test failed!!" >/dev/stderr
