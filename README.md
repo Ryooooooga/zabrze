@@ -81,6 +81,16 @@ $ git push -d origin B<CR>
 $ git push -d origin main
 ```
 
+### Conditional abbreviation
+
+```yaml
+abbrevs:
+  - name: chrome
+    abbr: chrome
+    snippet: open -a 'Google Chrome'
+    if: '[[ "$OSTYPE" =~ darwin ]]' # only available in macOS
+```
+
 ### Suffix alias
 
 ```yaml
