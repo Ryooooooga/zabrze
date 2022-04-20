@@ -5,8 +5,6 @@ use std::borrow::Cow;
 
 #[derive(Debug, PartialEq)]
 pub struct ExpandResult<'a> {
-    pub lbuffer: &'a str,
-    pub rbuffer: &'a str,
     pub replacement: SnippetReplacement<'a>,
     pub left_snippet: &'a str,
     pub right_snippet: &'a str,
@@ -24,18 +22,21 @@ pub struct SnippetReplacement<'a> {
 }
 
 pub fn run(args: &ExpandArgs) {
-    if let Some(result) = expand(args, &Config::load_or_exit()) {
+    let lbuffer = &args.lbuffer;
+    let rbuffer = &args.rbuffer;
+
+    if let Some(result) = expand(&Config::load_or_exit(), lbuffer) {
         let snippet_start_index = result.replacement.start_index;
         let snippet_end_index = result.replacement.end_index;
 
-        let lbuffer_pre = escape(Cow::from(&result.lbuffer[..snippet_start_index]));
-        let lbuffer_post = escape(Cow::from(&result.lbuffer[snippet_end_index..]));
+        let lbuffer_pre = escape(Cow::from(&lbuffer[..snippet_start_index]));
+        let lbuffer_post = escape(Cow::from(&lbuffer[snippet_end_index..]));
         let snippet_prefix = escape(Cow::from(result.replacement.snippet_prefix));
         let snippet_suffix = escape(Cow::from(result.replacement.snippet_suffix));
         let left_snippet = escape(Cow::from(result.left_snippet));
         let right_snippet = escape(Cow::from(result.right_snippet));
 
-        let rbuffer = escape(Cow::from(result.rbuffer));
+        let rbuffer = escape(Cow::from(rbuffer));
         let evaluate = if result.evaluate { "(e)" } else { "" };
 
         if let Some(condition) = result.condition {
@@ -66,10 +67,7 @@ pub fn run(args: &ExpandArgs) {
     }
 }
 
-fn expand<'a>(args: &'a ExpandArgs, config: &'a Config) -> Option<ExpandResult<'a>> {
-    let lbuffer = &args.lbuffer;
-    let rbuffer = &args.rbuffer;
-
+fn expand<'a>(config: &'a Config, lbuffer: &'a str) -> Option<ExpandResult<'a>> {
     let command_index = find_last_command_index(lbuffer);
     let command = lbuffer[command_index..].trim_start();
 
@@ -120,8 +118,6 @@ fn expand<'a>(args: &'a ExpandArgs, config: &'a Config) -> Option<ExpandResult<'
     };
 
     Some(ExpandResult {
-        lbuffer,
-        rbuffer,
         replacement,
         left_snippet: matched.left_snippet(),
         right_snippet: matched.right_snippet(),
@@ -189,7 +185,6 @@ mod tests {
         struct Scenario<'a> {
             pub testname: &'a str,
             pub lbuffer: &'a str,
-            pub rbuffer: &'a str,
             pub expected: Option<ExpandResult<'a>>,
         }
 
@@ -197,36 +192,12 @@ mod tests {
             Scenario {
                 testname: "empty",
                 lbuffer: "",
-                rbuffer: "",
                 expected: None,
             },
             Scenario {
                 testname: "simple abbr",
                 lbuffer: "g",
-                rbuffer: "",
                 expected: Some(ExpandResult {
-                    lbuffer: "g",
-                    rbuffer: "",
-                    replacement: SnippetReplacement {
-                        start_index: 0,
-                        end_index: 1,
-                        snippet_prefix: "",
-                        snippet_suffix: "",
-                    },
-                    left_snippet: "git",
-                    right_snippet: "",
-                    condition: None,
-                    evaluate: false,
-                    has_placeholder: false,
-                }),
-            },
-            Scenario {
-                testname: "simple abbr with rbuffer",
-                lbuffer: "g",
-                rbuffer: " --pager=never",
-                expected: Some(ExpandResult {
-                    lbuffer: "g",
-                    rbuffer: " --pager=never",
                     replacement: SnippetReplacement {
                         start_index: 0,
                         end_index: 1,
@@ -243,10 +214,7 @@ mod tests {
             Scenario {
                 testname: "simple abbr with leading command",
                 lbuffer: "echo hello; g",
-                rbuffer: "",
                 expected: Some(ExpandResult {
-                    lbuffer: "echo hello; g",
-                    rbuffer: "",
                     replacement: SnippetReplacement {
                         start_index: 12,
                         end_index: 13,
@@ -263,10 +231,7 @@ mod tests {
             Scenario {
                 testname: "global abbr",
                 lbuffer: "echo hello null",
-                rbuffer: "",
                 expected: Some(ExpandResult {
-                    lbuffer: "echo hello null",
-                    rbuffer: "",
                     replacement: SnippetReplacement {
                         start_index: 11,
                         end_index: 15,
@@ -283,10 +248,7 @@ mod tests {
             Scenario {
                 testname: "global abbr with context",
                 lbuffer: "echo hello; git c",
-                rbuffer: " -m hello",
                 expected: Some(ExpandResult {
-                    lbuffer: "echo hello; git c",
-                    rbuffer: " -m hello",
                     replacement: SnippetReplacement {
                         start_index: 16,
                         end_index: 17,
@@ -303,22 +265,17 @@ mod tests {
             Scenario {
                 testname: "global abbr with miss matched context",
                 lbuffer: "echo git c",
-                rbuffer: "",
                 expected: None,
             },
             Scenario {
                 testname: "no matched abbr",
                 lbuffer: "echo",
-                rbuffer: " hello",
                 expected: None,
             },
             Scenario {
                 testname: "simple abbr with evaluate=true",
                 lbuffer: "home",
-                rbuffer: "",
                 expected: Some(ExpandResult {
-                    lbuffer: "home",
-                    rbuffer: "",
                     replacement: SnippetReplacement {
                         start_index: 0,
                         end_index: 4,
@@ -335,10 +292,7 @@ mod tests {
             Scenario {
                 testname: "simple abbr with placeholder",
                 lbuffer: "git cm",
-                rbuffer: "",
                 expected: Some(ExpandResult {
-                    lbuffer: "git cm",
-                    rbuffer: "",
                     replacement: SnippetReplacement {
                         start_index: 4,
                         end_index: 6,
@@ -355,10 +309,7 @@ mod tests {
             Scenario {
                 testname: "replace-all action",
                 lbuffer: "apt install",
-                rbuffer: "",
                 expected: Some(ExpandResult {
-                    lbuffer: "apt install",
-                    rbuffer: "",
                     replacement: SnippetReplacement {
                         start_index: 0,
                         end_index: 11,
@@ -375,10 +326,7 @@ mod tests {
             Scenario {
                 testname: "prepend action",
                 lbuffer: "..",
-                rbuffer: "",
                 expected: Some(ExpandResult {
-                    lbuffer: "..",
-                    rbuffer: "",
                     replacement: SnippetReplacement {
                         start_index: 0,
                         end_index: 0,
@@ -395,10 +343,7 @@ mod tests {
             Scenario {
                 testname: "prepend action 2",
                 lbuffer: "pwd; ..",
-                rbuffer: "",
                 expected: Some(ExpandResult {
-                    lbuffer: "pwd; ..",
-                    rbuffer: "",
                     replacement: SnippetReplacement {
                         start_index: 5,
                         end_index: 5,
@@ -415,12 +360,7 @@ mod tests {
         ];
 
         for s in scenarios {
-            let args = ExpandArgs {
-                lbuffer: s.lbuffer.to_string(),
-                rbuffer: s.rbuffer.to_string(),
-            };
-
-            let actual = expand(&args, &config);
+            let actual = expand(&config, s.lbuffer);
 
             assert_eq!(actual, s.expected, "{}", s.testname);
         }
