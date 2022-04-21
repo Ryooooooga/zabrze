@@ -1,12 +1,11 @@
-use crate::config::{Action, Config};
+use crate::config::abbrev::{Abbrev, Action, Match};
+use crate::config::Config;
 use crate::opt::ExpandArgs;
 use shell_escape::escape;
 use std::borrow::Cow;
 
 #[derive(Debug, PartialEq)]
 pub struct ExpandResult<'a> {
-    pub lbuffer: &'a str,
-    pub rbuffer: &'a str,
     pub replacement: SnippetReplacement<'a>,
     pub left_snippet: &'a str,
     pub right_snippet: &'a str,
@@ -24,23 +23,40 @@ pub struct SnippetReplacement<'a> {
 }
 
 pub fn run(args: &ExpandArgs) {
-    if let Some(result) = expand(args, &Config::load_or_exit()) {
+    let config = Config::load_or_exit();
+
+    let lbuffer = &args.lbuffer;
+    let rbuffer = &args.rbuffer;
+
+    let results = expand(&config, lbuffer);
+    if results.is_empty() {
+        return;
+    }
+
+    let mut has_if = false;
+    for result in results {
         let snippet_start_index = result.replacement.start_index;
         let snippet_end_index = result.replacement.end_index;
 
-        let lbuffer_pre = escape(Cow::from(&result.lbuffer[..snippet_start_index]));
-        let lbuffer_post = escape(Cow::from(&result.lbuffer[snippet_end_index..]));
+        let lbuffer_pre = escape(Cow::from(&lbuffer[..snippet_start_index]));
+        let lbuffer_post = escape(Cow::from(&lbuffer[snippet_end_index..]));
         let snippet_prefix = escape(Cow::from(result.replacement.snippet_prefix));
         let snippet_suffix = escape(Cow::from(result.replacement.snippet_suffix));
         let left_snippet = escape(Cow::from(result.left_snippet));
         let right_snippet = escape(Cow::from(result.right_snippet));
 
-        let rbuffer = escape(Cow::from(result.rbuffer));
+        let rbuffer = escape(Cow::from(rbuffer));
         let evaluate = if result.evaluate { "(e)" } else { "" };
 
-        if let Some(condition) = result.condition {
-            let condition = escape(Cow::from(condition));
-            print!(r#"if eval {condition};then "#);
+        if let Some(condition) = result.condition.map(|c| escape(Cow::from(c))) {
+            if !has_if {
+                print!(r#"if eval {condition};then "#);
+            } else {
+                print!(r#"elif eval {condition};then "#);
+            }
+            has_if = true;
+        } else if has_if {
+            print!(r"else ");
         }
 
         print!(r"local lbuffer_pre={lbuffer_pre}{snippet_prefix};");
@@ -57,78 +73,51 @@ pub fn run(args: &ExpandArgs) {
             print!(r#"RBUFFER="${{rbuffer}}";"#);
             print!(r"__zabrze_has_placeholder=;");
         }
-
-        if result.condition.is_some() {
-            print!(r"fi");
-        }
-
-        println!();
     }
+
+    if has_if {
+        print!(r"fi");
+    }
+
+    println!();
 }
 
-fn expand<'a>(args: &'a ExpandArgs, config: &'a Config) -> Option<ExpandResult<'a>> {
-    let lbuffer = &args.lbuffer;
-    let rbuffer = &args.rbuffer;
-
-    let command_index = find_last_command_index(lbuffer);
-    let command = lbuffer[command_index..].trim_start();
+fn expand<'a>(config: &'a Config, lbuffer: &'a str) -> Vec<ExpandResult<'a>> {
+    let command = {
+        let command_index = find_last_command_index(lbuffer);
+        lbuffer[command_index..].trim_start()
+    };
 
     let (_, last_arg) = command
         .rsplit_once(char::is_whitespace)
         .unwrap_or(("", command));
 
+    let command_start_index = lbuffer.len() - command.len();
+    let command_end_index = lbuffer.len();
+    let last_arg_start_index = lbuffer.len() - last_arg.len();
+
     if last_arg.is_empty() {
-        return None;
+        return Vec::new();
     }
 
-    let matched = config
-        .abbrevs
+    let matches = find_matches(&config.abbrevs, command, last_arg);
+
+    matches
         .iter()
-        .flat_map(|abbr| abbr.do_match(command, last_arg))
-        .next()?;
-
-    let replacement = match matched.action() {
-        Action::ReplaceLast => {
-            let last_arg_start_index = lbuffer.len() - last_arg.len();
-            let last_arg_end_index = lbuffer.len();
-            SnippetReplacement {
-                start_index: last_arg_start_index,
-                end_index: last_arg_end_index,
-                snippet_prefix: "",
-                snippet_suffix: "",
-            }
-        }
-        Action::ReplaceAll => {
-            let command_start_index = lbuffer.len() - command.len();
-            let command_end_index = lbuffer.len();
-            SnippetReplacement {
-                start_index: command_start_index,
-                end_index: command_end_index,
-                snippet_prefix: "",
-                snippet_suffix: "",
-            }
-        }
-        Action::Prepend => {
-            let command_start_index = lbuffer.len() - command.len();
-            SnippetReplacement {
-                start_index: command_start_index,
-                end_index: command_start_index,
-                snippet_prefix: "",
-                snippet_suffix: " ",
-            }
-        }
-    };
-
-    Some(ExpandResult {
-        lbuffer,
-        rbuffer,
-        replacement,
-        left_snippet: matched.left_snippet(),
-        right_snippet: matched.right_snippet(),
-        condition: matched.condition(),
-        evaluate: matched.evaluate(),
-        has_placeholder: matched.has_placeholder(),
-    })
+        .map(|m| ExpandResult {
+            replacement: replacement_for(
+                m.action(),
+                command_start_index,
+                command_end_index,
+                last_arg_start_index,
+            ),
+            left_snippet: m.left_snippet(),
+            right_snippet: m.right_snippet(),
+            condition: m.condition(),
+            evaluate: m.evaluate(),
+            has_placeholder: m.has_placeholder(),
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -173,6 +162,19 @@ mod tests {
                 context: '^apt '
                 if: (( ${+commands[apt]} ))
 
+              - name: trash
+                abbr: rm
+                snippet: trash
+                if: (( ${+commands[trash]} ))
+
+              - name: rm -r
+                abbr: rm
+                snippet: rm -r
+
+              - name: never matched
+                abbr: rm
+                snippet: never
+
               - name: cd ..
                 abbr: ..
                 snippet: cd
@@ -189,24 +191,19 @@ mod tests {
         struct Scenario<'a> {
             pub testname: &'a str,
             pub lbuffer: &'a str,
-            pub rbuffer: &'a str,
-            pub expected: Option<ExpandResult<'a>>,
+            pub expected: Vec<ExpandResult<'a>>,
         }
 
         let scenarios = &[
             Scenario {
                 testname: "empty",
                 lbuffer: "",
-                rbuffer: "",
-                expected: None,
+                expected: Vec::new(),
             },
             Scenario {
                 testname: "simple abbr",
                 lbuffer: "g",
-                rbuffer: "",
-                expected: Some(ExpandResult {
-                    lbuffer: "g",
-                    rbuffer: "",
+                expected: vec![ExpandResult {
                     replacement: SnippetReplacement {
                         start_index: 0,
                         end_index: 1,
@@ -218,35 +215,12 @@ mod tests {
                     condition: None,
                     evaluate: false,
                     has_placeholder: false,
-                }),
-            },
-            Scenario {
-                testname: "simple abbr with rbuffer",
-                lbuffer: "g",
-                rbuffer: " --pager=never",
-                expected: Some(ExpandResult {
-                    lbuffer: "g",
-                    rbuffer: " --pager=never",
-                    replacement: SnippetReplacement {
-                        start_index: 0,
-                        end_index: 1,
-                        snippet_prefix: "",
-                        snippet_suffix: "",
-                    },
-                    left_snippet: "git",
-                    right_snippet: "",
-                    condition: None,
-                    evaluate: false,
-                    has_placeholder: false,
-                }),
+                }],
             },
             Scenario {
                 testname: "simple abbr with leading command",
                 lbuffer: "echo hello; g",
-                rbuffer: "",
-                expected: Some(ExpandResult {
-                    lbuffer: "echo hello; g",
-                    rbuffer: "",
+                expected: vec![ExpandResult {
                     replacement: SnippetReplacement {
                         start_index: 12,
                         end_index: 13,
@@ -258,15 +232,12 @@ mod tests {
                     condition: None,
                     evaluate: false,
                     has_placeholder: false,
-                }),
+                }],
             },
             Scenario {
                 testname: "global abbr",
                 lbuffer: "echo hello null",
-                rbuffer: "",
-                expected: Some(ExpandResult {
-                    lbuffer: "echo hello null",
-                    rbuffer: "",
+                expected: vec![ExpandResult {
                     replacement: SnippetReplacement {
                         start_index: 11,
                         end_index: 15,
@@ -278,15 +249,12 @@ mod tests {
                     condition: None,
                     evaluate: false,
                     has_placeholder: false,
-                }),
+                }],
             },
             Scenario {
                 testname: "global abbr with context",
                 lbuffer: "echo hello; git c",
-                rbuffer: " -m hello",
-                expected: Some(ExpandResult {
-                    lbuffer: "echo hello; git c",
-                    rbuffer: " -m hello",
+                expected: vec![ExpandResult {
                     replacement: SnippetReplacement {
                         start_index: 16,
                         end_index: 17,
@@ -298,27 +266,22 @@ mod tests {
                     condition: None,
                     evaluate: false,
                     has_placeholder: false,
-                }),
+                }],
             },
             Scenario {
                 testname: "global abbr with miss matched context",
                 lbuffer: "echo git c",
-                rbuffer: "",
-                expected: None,
+                expected: Vec::new(),
             },
             Scenario {
                 testname: "no matched abbr",
                 lbuffer: "echo",
-                rbuffer: " hello",
-                expected: None,
+                expected: Vec::new(),
             },
             Scenario {
                 testname: "simple abbr with evaluate=true",
                 lbuffer: "home",
-                rbuffer: "",
-                expected: Some(ExpandResult {
-                    lbuffer: "home",
-                    rbuffer: "",
+                expected: vec![ExpandResult {
                     replacement: SnippetReplacement {
                         start_index: 0,
                         end_index: 4,
@@ -330,15 +293,12 @@ mod tests {
                     condition: None,
                     evaluate: true,
                     has_placeholder: false,
-                }),
+                }],
             },
             Scenario {
                 testname: "simple abbr with placeholder",
                 lbuffer: "git cm",
-                rbuffer: "",
-                expected: Some(ExpandResult {
-                    lbuffer: "git cm",
-                    rbuffer: "",
+                expected: vec![ExpandResult {
                     replacement: SnippetReplacement {
                         start_index: 4,
                         end_index: 6,
@@ -350,15 +310,12 @@ mod tests {
                     condition: None,
                     evaluate: false,
                     has_placeholder: true,
-                }),
+                }],
             },
             Scenario {
                 testname: "replace-all action",
                 lbuffer: "apt install",
-                rbuffer: "",
-                expected: Some(ExpandResult {
-                    lbuffer: "apt install",
-                    rbuffer: "",
+                expected: vec![ExpandResult {
                     replacement: SnippetReplacement {
                         start_index: 0,
                         end_index: 11,
@@ -370,15 +327,12 @@ mod tests {
                     condition: Some("(( ${+commands[apt]} ))"),
                     evaluate: false,
                     has_placeholder: false,
-                }),
+                }],
             },
             Scenario {
                 testname: "prepend action",
                 lbuffer: "..",
-                rbuffer: "",
-                expected: Some(ExpandResult {
-                    lbuffer: "..",
-                    rbuffer: "",
+                expected: vec![ExpandResult {
                     replacement: SnippetReplacement {
                         start_index: 0,
                         end_index: 0,
@@ -390,15 +344,12 @@ mod tests {
                     condition: None,
                     evaluate: false,
                     has_placeholder: false,
-                }),
+                }],
             },
             Scenario {
                 testname: "prepend action 2",
                 lbuffer: "pwd; ..",
-                rbuffer: "",
-                expected: Some(ExpandResult {
-                    lbuffer: "pwd; ..",
-                    rbuffer: "",
+                expected: vec![ExpandResult {
                     replacement: SnippetReplacement {
                         start_index: 5,
                         end_index: 5,
@@ -410,17 +361,44 @@ mod tests {
                     condition: None,
                     evaluate: false,
                     has_placeholder: false,
-                }),
+                }],
+            },
+            Scenario {
+                testname: "conditional",
+                lbuffer: "rm",
+                expected: vec![
+                    ExpandResult {
+                        replacement: SnippetReplacement {
+                            start_index: 0,
+                            end_index: 2,
+                            snippet_prefix: "",
+                            snippet_suffix: "",
+                        },
+                        left_snippet: "trash",
+                        right_snippet: "",
+                        condition: Some("(( ${+commands[trash]} ))"),
+                        evaluate: false,
+                        has_placeholder: false,
+                    },
+                    ExpandResult {
+                        replacement: SnippetReplacement {
+                            start_index: 0,
+                            end_index: 2,
+                            snippet_prefix: "",
+                            snippet_suffix: "",
+                        },
+                        left_snippet: "rm -r",
+                        right_snippet: "",
+                        condition: None,
+                        evaluate: false,
+                        has_placeholder: false,
+                    },
+                ],
             },
         ];
 
         for s in scenarios {
-            let args = ExpandArgs {
-                lbuffer: s.lbuffer.to_string(),
-                rbuffer: s.rbuffer.to_string(),
-            };
-
-            let actual = expand(&args, &config);
+            let actual = expand(&config, s.lbuffer);
 
             assert_eq!(actual, s.expected, "{}", s.testname);
         }
@@ -439,4 +417,48 @@ fn test_find_last_command_index() {
     assert_eq!(find_last_command_index("echo hello; git commit"), 11);
     assert_eq!(find_last_command_index("echo hello && git commit"), 13);
     assert_eq!(find_last_command_index("seq 10 | tail -3 | cat"), 18);
+}
+
+fn find_matches<'a>(abbrevs: &'a [Abbrev], command: &'a str, last_arg: &'a str) -> Vec<Match<'a>> {
+    let mut matches = Vec::new();
+    for abbr in abbrevs {
+        if let Some(m) = abbr.do_match(command, last_arg) {
+            let has_condition = m.condition().is_some();
+            matches.push(m);
+
+            if !has_condition {
+                // Early break if m does not have condition.
+                break;
+            }
+        }
+    }
+    matches
+}
+
+fn replacement_for(
+    action: &Action,
+    command_start_index: usize,
+    command_end_index: usize,
+    last_arg_start_index: usize,
+) -> SnippetReplacement<'static> {
+    match action {
+        Action::ReplaceLast => SnippetReplacement {
+            start_index: last_arg_start_index,
+            end_index: command_end_index,
+            snippet_prefix: "",
+            snippet_suffix: "",
+        },
+        Action::ReplaceAll => SnippetReplacement {
+            start_index: command_start_index,
+            end_index: command_end_index,
+            snippet_prefix: "",
+            snippet_suffix: "",
+        },
+        Action::Prepend => SnippetReplacement {
+            start_index: command_start_index,
+            end_index: command_start_index,
+            snippet_prefix: "",
+            snippet_suffix: " ",
+        },
+    }
 }

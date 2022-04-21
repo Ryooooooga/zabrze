@@ -71,6 +71,7 @@ try "yes | ./a.ts"  ""          "yes | deno run ./a.ts"         ""              
 try "yes | ./ab.ts" ""          "yes | deno run ./ab.ts"        ""              ""
 try "cond"          ""          "conditional abbrev"            ""              ""
 try "cond2"         ""          "cond2"                         ""              ""
+try "cond3"         ""          "conditional fallback"          ""              ""
 
 if [ "$result" -ne 0 ]; then
     echo "test failed!!" >/dev/stderr

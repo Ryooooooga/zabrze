@@ -72,3 +72,10 @@ abbrevs:
   - abbr: cond2
     snippet: conditional abbrev
     if: '[[ $ZABRZE_TEST = 0 ]]'
+
+  - abbr: cond3
+    snippet: conditional abbrev
+    if: '[[ $ZABRZE_TEST = 0 ]]'
+
+  - abbr: cond3
+    snippet: conditional fallback
