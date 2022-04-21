@@ -44,11 +44,12 @@ pub fn run(args: &ExpandArgs) {
         let snippet_suffix = escape(Cow::from(result.replacement.snippet_suffix));
         let left_snippet = escape(Cow::from(result.left_snippet));
         let right_snippet = escape(Cow::from(result.right_snippet));
+        let condition = result.condition.map(|c| escape(Cow::from(c)));
 
         let rbuffer = escape(Cow::from(rbuffer));
         let evaluate = if result.evaluate { "(e)" } else { "" };
 
-        if let Some(condition) = result.condition.map(|c| escape(Cow::from(c))) {
+        if let Some(condition) = &condition {
             if !has_if {
                 print!(r#"if eval {condition};then "#);
             } else {
@@ -72,6 +73,10 @@ pub fn run(args: &ExpandArgs) {
             print!(r#"LBUFFER="${{lbuffer_pre}}${{{evaluate}left_snippet}}${{lbuffer_post}}";"#);
             print!(r#"RBUFFER="${{rbuffer}}";"#);
             print!(r"__zabrze_has_placeholder=;");
+        }
+
+        if condition.is_none() {
+            break;
         }
     }
 
