@@ -68,12 +68,18 @@ pub fn run(args: &ExpandArgs) {
 }
 
 fn expand<'a>(config: &'a Config, lbuffer: &'a str) -> Option<ExpandResult<'a>> {
-    let command_index = find_last_command_index(lbuffer);
-    let command = lbuffer[command_index..].trim_start();
+    let command = {
+        let command_index = find_last_command_index(lbuffer);
+        lbuffer[command_index..].trim_start()
+    };
 
     let (_, last_arg) = command
         .rsplit_once(char::is_whitespace)
         .unwrap_or(("", command));
+
+    let command_start_index = lbuffer.len() - command.len();
+    let command_end_index = lbuffer.len();
+    let last_arg_start_index = lbuffer.len() - last_arg.len();
 
     if last_arg.is_empty() {
         return None;
@@ -85,37 +91,12 @@ fn expand<'a>(config: &'a Config, lbuffer: &'a str) -> Option<ExpandResult<'a>> 
         .flat_map(|abbr| abbr.do_match(command, last_arg))
         .next()?;
 
-    let replacement = match matched.action() {
-        Action::ReplaceLast => {
-            let last_arg_start_index = lbuffer.len() - last_arg.len();
-            let last_arg_end_index = lbuffer.len();
-            SnippetReplacement {
-                start_index: last_arg_start_index,
-                end_index: last_arg_end_index,
-                snippet_prefix: "",
-                snippet_suffix: "",
-            }
-        }
-        Action::ReplaceAll => {
-            let command_start_index = lbuffer.len() - command.len();
-            let command_end_index = lbuffer.len();
-            SnippetReplacement {
-                start_index: command_start_index,
-                end_index: command_end_index,
-                snippet_prefix: "",
-                snippet_suffix: "",
-            }
-        }
-        Action::Prepend => {
-            let command_start_index = lbuffer.len() - command.len();
-            SnippetReplacement {
-                start_index: command_start_index,
-                end_index: command_start_index,
-                snippet_prefix: "",
-                snippet_suffix: " ",
-            }
-        }
-    };
+    let replacement = replacement_for(
+        matched.action(),
+        command_start_index,
+        command_end_index,
+        last_arg_start_index,
+    );
 
     Some(ExpandResult {
         replacement,
@@ -379,4 +360,32 @@ fn test_find_last_command_index() {
     assert_eq!(find_last_command_index("echo hello; git commit"), 11);
     assert_eq!(find_last_command_index("echo hello && git commit"), 13);
     assert_eq!(find_last_command_index("seq 10 | tail -3 | cat"), 18);
+}
+
+fn replacement_for(
+    action: &Action,
+    command_start_index: usize,
+    command_end_index: usize,
+    last_arg_start_index: usize,
+) -> SnippetReplacement<'static> {
+    match action {
+        Action::ReplaceLast => SnippetReplacement {
+            start_index: last_arg_start_index,
+            end_index: command_end_index,
+            snippet_prefix: "",
+            snippet_suffix: "",
+        },
+        Action::ReplaceAll => SnippetReplacement {
+            start_index: command_start_index,
+            end_index: command_end_index,
+            snippet_prefix: "",
+            snippet_suffix: "",
+        },
+        Action::Prepend => SnippetReplacement {
+            start_index: command_start_index,
+            end_index: command_start_index,
+            snippet_prefix: "",
+            snippet_suffix: " ",
+        },
+    }
 }
