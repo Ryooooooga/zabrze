@@ -13,7 +13,7 @@ pub struct ExpandResult<'a> {
 
 #[derive(Debug, PartialEq)]
 pub struct Expansion<'a> {
-    pub replacement: SnippetReplacement<'a>,
+    pub replacement: SnippetReplacement,
     pub left_snippet: &'a str,
     pub right_snippet: &'a str,
     pub condition: Option<&'a str>,
@@ -22,11 +22,9 @@ pub struct Expansion<'a> {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct SnippetReplacement<'a> {
+pub struct SnippetReplacement {
     pub start_index: usize,
     pub end_index: usize,
-    pub snippet_prefix: &'a str,
-    pub snippet_suffix: &'a str,
 }
 
 pub fn run(args: &ExpandArgs) {
@@ -57,8 +55,6 @@ pub fn run(args: &ExpandArgs) {
 
         let lbuffer_pre = escape(Cow::from(&lbuffer[..snippet_start_index]));
         let lbuffer_post = escape(Cow::from(&lbuffer[snippet_end_index..]));
-        let snippet_prefix = escape(Cow::from(expansion.replacement.snippet_prefix));
-        let snippet_suffix = escape(Cow::from(expansion.replacement.snippet_suffix));
         let left_snippet = escape(Cow::from(expansion.left_snippet));
         let right_snippet = escape(Cow::from(expansion.right_snippet));
         let condition = expansion.condition.map(|c| escape(Cow::from(c)));
@@ -77,18 +73,15 @@ pub fn run(args: &ExpandArgs) {
             print!(r"else ");
         }
 
-        print!(r"local lbuffer_pre={lbuffer_pre}{snippet_prefix};");
-        print!(r"local lbuffer_post={snippet_suffix}{lbuffer_post};");
-        print!(r"local rbuffer={rbuffer};");
         print!(r"local left_snippet={left_snippet};");
         if expansion.has_placeholder {
             print!(r"local right_snippet={right_snippet};");
-            print!(r#"LBUFFER="${{lbuffer_pre}}${{{evaluate}left_snippet}}";"#);
-            print!(r#"RBUFFER="${{{evaluate}right_snippet}}${{lbuffer_post}}${{rbuffer}}";"#);
+            print!(r#"LBUFFER={lbuffer_pre}"${{{evaluate}left_snippet}}";"#);
+            print!(r#"RBUFFER="${{{evaluate}right_snippet}}"{lbuffer_post}{rbuffer};"#);
             print!(r"__zabrze_has_placeholder=1;");
         } else {
-            print!(r#"LBUFFER="${{lbuffer_pre}}${{{evaluate}left_snippet}}${{lbuffer_post}}";"#);
-            print!(r#"RBUFFER="${{rbuffer}}";"#);
+            print!(r#"LBUFFER={lbuffer_pre}"${{{evaluate}left_snippet}}"{lbuffer_post};"#);
+            print!(r#"RBUFFER={rbuffer};"#);
             print!(r"__zabrze_has_placeholder=;");
         }
 
@@ -208,9 +201,9 @@ mod tests {
                 snippet: never
 
               - name: cd ..
-                abbr: ..
-                snippet: cd
-                action: prepend
+                abbr-pattern: \.\.$
+                snippet: cd $abbr
+                evaluate: true
             ",
         )
         .unwrap()
@@ -246,8 +239,6 @@ mod tests {
                         replacement: SnippetReplacement {
                             start_index: 0,
                             end_index: 1,
-                            snippet_prefix: "",
-                            snippet_suffix: "",
                         },
                         left_snippet: "git",
                         right_snippet: "",
@@ -267,8 +258,6 @@ mod tests {
                         replacement: SnippetReplacement {
                             start_index: 12,
                             end_index: 13,
-                            snippet_prefix: "",
-                            snippet_suffix: "",
                         },
                         left_snippet: "git",
                         right_snippet: "",
@@ -288,8 +277,6 @@ mod tests {
                         replacement: SnippetReplacement {
                             start_index: 11,
                             end_index: 15,
-                            snippet_prefix: "",
-                            snippet_suffix: "",
                         },
                         left_snippet: ">/dev/null",
                         right_snippet: "",
@@ -309,8 +296,6 @@ mod tests {
                         replacement: SnippetReplacement {
                             start_index: 16,
                             end_index: 17,
-                            snippet_prefix: "",
-                            snippet_suffix: "",
                         },
                         left_snippet: "commit",
                         right_snippet: "",
@@ -348,8 +333,6 @@ mod tests {
                         replacement: SnippetReplacement {
                             start_index: 0,
                             end_index: 4,
-                            snippet_prefix: "",
-                            snippet_suffix: "",
                         },
                         left_snippet: "$HOME",
                         right_snippet: "",
@@ -369,8 +352,6 @@ mod tests {
                         replacement: SnippetReplacement {
                             start_index: 4,
                             end_index: 6,
-                            snippet_prefix: "",
-                            snippet_suffix: "",
                         },
                         left_snippet: "commit -m '",
                         right_snippet: "'",
@@ -390,8 +371,6 @@ mod tests {
                         replacement: SnippetReplacement {
                             start_index: 0,
                             end_index: 11,
-                            snippet_prefix: "",
-                            snippet_suffix: "",
                         },
                         left_snippet: "sudo apt install -y",
                         right_snippet: "",
@@ -410,35 +389,31 @@ mod tests {
                     expansions: vec![Expansion {
                         replacement: SnippetReplacement {
                             start_index: 0,
-                            end_index: 0,
-                            snippet_prefix: "",
-                            snippet_suffix: " ",
+                            end_index: 2,
                         },
-                        left_snippet: "cd",
+                        left_snippet: "cd $abbr",
                         right_snippet: "",
                         condition: None,
-                        evaluate: false,
+                        evaluate: true,
                         has_placeholder: false,
                     }],
                 },
             },
             Scenario {
                 testname: "prepend action 2",
-                lbuffer: "pwd; ..",
+                lbuffer: "pwd; ../..",
                 expected: ExpandResult {
-                    command: "..",
-                    last_arg: "..",
+                    command: "../..",
+                    last_arg: "../..",
                     expansions: vec![Expansion {
                         replacement: SnippetReplacement {
                             start_index: 5,
-                            end_index: 5,
-                            snippet_prefix: "",
-                            snippet_suffix: " ",
+                            end_index: 10,
                         },
-                        left_snippet: "cd",
+                        left_snippet: "cd $abbr",
                         right_snippet: "",
                         condition: None,
-                        evaluate: false,
+                        evaluate: true,
                         has_placeholder: false,
                     }],
                 },
@@ -454,8 +429,6 @@ mod tests {
                             replacement: SnippetReplacement {
                                 start_index: 0,
                                 end_index: 2,
-                                snippet_prefix: "",
-                                snippet_suffix: "",
                             },
                             left_snippet: "trash",
                             right_snippet: "",
@@ -467,8 +440,6 @@ mod tests {
                             replacement: SnippetReplacement {
                                 start_index: 0,
                                 end_index: 2,
-                                snippet_prefix: "",
-                                snippet_suffix: "",
                             },
                             left_snippet: "rm -r",
                             right_snippet: "",
@@ -524,30 +495,15 @@ fn replacement_for(
     command_start_index: usize,
     command_end_index: usize,
     last_arg_start_index: usize,
-) -> SnippetReplacement<'static> {
+) -> SnippetReplacement {
     match action {
         Action::ReplaceLast => SnippetReplacement {
             start_index: last_arg_start_index,
             end_index: command_end_index,
-            snippet_prefix: "",
-            snippet_suffix: "",
         },
         Action::ReplaceAll => SnippetReplacement {
             start_index: command_start_index,
             end_index: command_end_index,
-            snippet_prefix: "",
-            snippet_suffix: "",
         },
-        Action::Prepend => {
-            eprintln!(
-                "zabrze: WARNING! `action: prepend` is deprecated and will be removed in v0.2.0\n    ref: https://github.com/Ryooooooga/zabrze/pull/9"
-            );
-            SnippetReplacement {
-                start_index: command_start_index,
-                end_index: command_start_index,
-                snippet_prefix: "",
-                snippet_suffix: " ",
-            }
-        }
     }
 }
