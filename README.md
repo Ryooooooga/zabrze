@@ -30,7 +30,7 @@ then
 ```zsh
 $ g<SP>cm<SP>
 #  ↓ expanded
-$ git commit -m 
+$ git commit -m
 
 $ cat a.txt | .1<CR>
 #  ↓ expanded and executed
@@ -105,6 +105,20 @@ abbrevs:
 $ ./a.py<CR>
 #  ↓ expanded and executed
 $ python3 ./a.py
+```
+
+### Abbreviation fallback
+
+```yaml
+abbrevs:
+  # used if trash is installed
+  - abbr: rm
+    snippet: trash
+    if: (( ${+commands[trash]} ))
+
+  # fallback
+  - abbr: rm
+    snippet: rm -r
 ```
 
 ## Installation
