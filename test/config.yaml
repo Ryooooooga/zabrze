@@ -50,7 +50,7 @@ abbrevs:
     snippet: "[ {} ]"
     action: replace-all
 
-  # prepend
+  # prepend (deprecated)
   - abbr-pattern: ^\.\.(/\.\.)*/?$
     snippet: cd
     action: prepend
@@ -61,21 +61,21 @@ abbrevs:
 
   # suffix aliases
   - abbr-pattern: \.ts$
-    snippet: deno run
-    action: prepend
+    snippet: deno run ${current_abbr}
+    evaluate: true
 
   # conditional
   - abbr: cond
     snippet: conditional abbrev
-    if: '[[ $ZABRZE_TEST = 1 ]]'
+    if: "[[ $ZABRZE_TEST = 1 ]]"
 
   - abbr: cond2
     snippet: conditional abbrev
-    if: '[[ $ZABRZE_TEST = 0 ]]'
+    if: "[[ $ZABRZE_TEST = 0 ]]"
 
   - abbr: cond3
     snippet: conditional abbrev
-    if: '[[ $ZABRZE_TEST = 0 ]]'
+    if: "[[ $ZABRZE_TEST = 0 ]]"
 
   - abbr: cond3
     snippet: conditional fallback
