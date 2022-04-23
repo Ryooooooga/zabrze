@@ -89,28 +89,7 @@ abbrevs:
     abbr: chrome
     snippet: open -a 'Google Chrome'
     if: '[[ "$OSTYPE" =~ darwin ]]' # only available in macOS
-```
 
-### Suffix alias
-
-```yaml
-abbrevs:
-  - name: python3 *.py
-    abbr-pattern: \.py$
-    snippet: python3
-    action: prepend
-```
-
-```zsh
-$ ./a.py<CR>
-#  ↓ expanded and executed
-$ python3 ./a.py
-```
-
-### Abbreviation fallback
-
-```yaml
-abbrevs:
   # used if trash is installed
   - abbr: rm
     snippet: trash
@@ -119,6 +98,22 @@ abbrevs:
   # fallback
   - abbr: rm
     snippet: rm -r
+```
+
+### Suffix alias
+
+```yaml
+abbrevs:
+  - name: python3 *.py
+    abbr-pattern: \.py$
+    snippet: python3 ${current_abbr}
+    evaluate: true
+```
+
+```zsh
+$ ./a.py<CR>
+#  ↓ expanded and executed
+$ python3 ./a.py
 ```
 
 ## Installation
