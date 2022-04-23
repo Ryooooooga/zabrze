@@ -459,11 +459,16 @@ fn replacement_for(
             snippet_prefix: "",
             snippet_suffix: "",
         },
-        Action::Prepend => SnippetReplacement {
-            start_index: command_start_index,
-            end_index: command_start_index,
-            snippet_prefix: "",
-            snippet_suffix: " ",
-        },
+        Action::Prepend => {
+            eprintln!(
+                "zabrze: WARNING! `action: prepend` is deprecated and will be removed in v0.2.0\n    ref: https://github.com/Ryooooooga/zabrze/pull/9"
+            );
+            SnippetReplacement {
+                start_index: command_start_index,
+                end_index: command_start_index,
+                snippet_prefix: "",
+                snippet_suffix: " ",
+            }
+        }
     }
 }
