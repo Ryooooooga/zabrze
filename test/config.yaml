@@ -61,7 +61,7 @@ abbrevs:
 
   # suffix aliases
   - abbr-pattern: \.ts$
-    snippet: deno run ${current_abbr}
+    snippet: deno run $abbr
     evaluate: true
 
   # conditional

@@ -106,7 +106,7 @@ abbrevs:
 abbrevs:
   - name: python3 *.py
     abbr-pattern: \.py$
-    snippet: python3 ${current_abbr}
+    snippet: python3 $abbr
     evaluate: true
 ```
 
