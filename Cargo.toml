@@ -1,6 +1,6 @@
 [package]
 name = "zabrze"
-version = "0.1.9"
+version = "0.1.10"
 authors = ['Ryooooooga <eial5q265e5@gmail.com>']
 description = 'ZSH abbreviation exapansion plugin'
 license = 'MIT'
