@@ -40,11 +40,15 @@ pub fn run(args: &ExpandArgs) {
         return;
     }
 
-    let current_command = escape(Cow::from(result.command));
-    let current_abbr = escape(Cow::from(result.last_arg));
+    let command = escape(Cow::from(result.command));
+    let abbr = escape(Cow::from(result.last_arg));
 
-    print!(r#"local current_command={current_command};"#);
-    print!(r#"local current_abbr={current_abbr};"#);
+    print!(r#"local command={command};"#);
+    print!(r#"local abbr={abbr};"#);
+
+    // Deprecation: `$current_command` and `$current_abbr` is deprecated, use `$command` and `$abbr` instead.
+    print!(r#"local current_command={command};"#);
+    print!(r#"local current_abbr={abbr};"#);
 
     let mut has_if = false;
     for expansion in &result.expansions {

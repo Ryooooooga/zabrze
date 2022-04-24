@@ -90,14 +90,12 @@ abbrevs:
     snippet: open -a 'Google Chrome'
     if: '[[ "$OSTYPE" =~ darwin ]]' # only available in macOS
 
-  # used if trash is installed
   - abbr: rm
     snippet: trash
-    if: (( ${+commands[trash]} ))
+    if: (( ${+commands[trash]} )) # available if trash is installed
 
-  # fallback
   - abbr: rm
-    snippet: rm -r
+    snippet: rm -r # fallback
 ```
 
 ### Suffix alias
@@ -106,7 +104,7 @@ abbrevs:
 abbrevs:
   - name: python3 *.py
     abbr-pattern: \.py$
-    snippet: python3 ${current_abbr}
+    snippet: python3 $abbr
     evaluate: true
 ```
 
