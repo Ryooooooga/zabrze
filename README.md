@@ -28,9 +28,9 @@ $ eval "$(zabrze init --bind-keys)"
 then
 
 ```zsh
-$ g<SP>cm<SP>
+$ g<SP>
 #  ↓ expanded
-$ git commit -m
+$ git
 
 $ cat a.txt | .1<CR>
 #  ↓ expanded and executed
