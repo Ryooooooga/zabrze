@@ -41,7 +41,7 @@ $ cat a.txt | awk '{print $1}'
 
 ```yaml
 abbrevs:
-  - name: '>/dev/null'
+  - name: '>/dev/null 2>&1'
     abbr: 'null'
     snippets: '>/dev/null 2>&1'
     global: true
@@ -90,11 +90,13 @@ abbrevs:
     snippet: open -a 'Google Chrome'
     if: '[[ "$OSTYPE" =~ darwin ]]' # only available in macOS
 
-  - abbr: rm
+  - name: trash
+    abbr: rm
     snippet: trash
     if: (( ${+commands[trash]} )) # available if trash is installed
 
-  - abbr: rm
+  - name: rm -r
+    abbr: rm
     snippet: rm -r # fallback
 ```
 
