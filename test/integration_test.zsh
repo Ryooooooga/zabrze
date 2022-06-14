@@ -40,7 +40,7 @@ try() {
     fi
 }
 
-export ZABRZE_CONFIG_FILE="${0:a:h}/config.yaml"
+export ZABRZE_CONFIG_HOME="${0:a:h}"
 export ZABRZE_TEST=1
 export EDITOR=vim
 

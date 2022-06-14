@@ -2,13 +2,13 @@ pub mod abbrev;
 pub mod config_path;
 
 pub use abbrev::{Abbrev, Action, Trigger};
-pub use config_path::default_config_path;
+pub use config_path::get_default_config_dir;
 
 use ansi_term::Color;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -39,11 +39,12 @@ impl Config {
     }
 
     pub fn load_or_exit() -> Self {
-        let path = &default_config_path().expect("could not determine config file path");
+        let config_dir = &get_default_config_dir().expect("could not determine config directory");
+        let mut path = PathBuf::from(config_dir);
+        path.push("config.yaml");
 
-        Self::load_from_file(path).unwrap_or_else(|err| {
-            let path = path.to_string_lossy();
-            let error_message = format!("failed to load config `{}': {}", path, err);
+        Self::load_from_file(&path).unwrap_or_else(|err| {
+            let error_message = format!("failed to load config `{}': {}", path.display(), err);
             let error_style = Color::Red.normal();
 
             eprintln!("{}", error_style.paint(error_message));
