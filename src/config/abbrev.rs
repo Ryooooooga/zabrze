@@ -16,8 +16,6 @@ pub enum Action {
     ReplaceLast,
     #[serde(rename = "replace-all")]
     ReplaceAll,
-    #[serde(rename = "prepend")]
-    Prepend,
 }
 
 impl Default for Action {
@@ -322,7 +320,7 @@ mod tests {
                     name: None,
                     trigger: Trigger::Regex(r"\.py$".to_string()),
                     snippet: "python3".to_string(),
-                    action: Action::Prepend,
+                    action: Action::ReplaceLast,
                     context: None,
                     condition: None,
                     global: false,

@@ -50,14 +50,13 @@ abbrevs:
     snippet: "[ {} ]"
     action: replace-all
 
-  # prepend (deprecated)
+  # current_abbr
   - abbr-pattern: ^\.\.(/\.\.)*/?$
-    snippet: cd
-    action: prepend
+    snippet: cd $abbr
+    evaluate: true
 
   - abbr: placeholder
-    snippet: ab{}cd
-    action: prepend
+    snippet: ab{}cd placeholder
 
   # suffix aliases
   - abbr-pattern: \.ts$

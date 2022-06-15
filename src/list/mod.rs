@@ -51,9 +51,9 @@ mod tests {
                 evaluate: true
 
               - name: ..
-                abbr: ^\.\.(/\.\.)*$
-                snippet: cd
-                action: prepend
+                abbr-pattern: ^\.\.(/\.\.)*$
+                snippet: cd $abbr
+                evaluate: true
             ",
         )
         .unwrap()
@@ -73,7 +73,7 @@ mod tests {
 c=commit
 null='>/dev/null'
 home='$HOME'
-^\.\.(/\.\.)*$=cd
+^\.\.(/\.\.)*$='cd $abbr'
 ";
 
         assert_eq!(output, expected);
