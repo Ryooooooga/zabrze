@@ -23,9 +23,7 @@ impl ConfigPath for ConfigPathImpl {
 fn get_default_dir<C: ConfigPath>(c: &C) -> Option<String> {
     // Return $ZABRZE_CONFIG_HOME if defined
     if let Some(zabrze_config_home) = c.env(ZABRZE_CONFIG_HOME_ENV_KEY) {
-        return zabrze_config_home
-            .to_str()
-            .map(|config_home| format!("{config_home}"));
+        return zabrze_config_home.to_str().map(String::from);
     }
 
     // Get ${XDG_CONFIG_HOME:-$HOME/.config}

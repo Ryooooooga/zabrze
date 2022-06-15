@@ -5,6 +5,7 @@ pub use abbrev::{Abbrev, Action, Trigger};
 pub use config_path::get_default_config_dir;
 
 use ansi_term::Color;
+use glob::glob;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io;
@@ -20,7 +21,7 @@ pub enum ConfigError {
     YamlError(#[from] serde_yaml::Error),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Config {
     pub abbrevs: Vec<Abbrev>,
 }
@@ -39,16 +40,48 @@ impl Config {
     }
 
     pub fn load_or_exit() -> Self {
-        let config_dir = &get_default_config_dir().expect("could not determine config directory");
-        let mut path = PathBuf::from(config_dir);
-        path.push("config.yaml");
+        let config_dir = get_default_config_dir().expect("could not determine config directory");
+        let mut config: Config = Default::default();
 
-        Self::load_from_file(&path).unwrap_or_else(|err| {
-            let error_message = format!("failed to load config `{}': {}", path.display(), err);
-            let error_style = Color::Red.normal();
+        for path in &Self::config_file_paths(&config_dir) {
+            match Self::load_from_file(&path) {
+                Ok(c) => config.merge(c),
+                Err(err) => {
+                    let error_message =
+                        format!("failed to load config `{}': {}", path.display(), err);
+                    let error_style = Color::Red.normal();
 
-            eprintln!("{}", error_style.paint(error_message));
-            std::process::exit(1);
-        })
+                    eprintln!("{}", error_style.paint(error_message));
+                }
+            };
+        }
+
+        config
+    }
+
+    fn merge(&mut self, mut other: Self) {
+        self.abbrevs.append(&mut other.abbrevs);
+    }
+
+    fn config_file_paths(config_dir: &str) -> Vec<PathBuf> {
+        let mut paths = Vec::new();
+
+        for ext in &["yaml", "yml"] {
+            let pattern = format!("{config_dir}/**/*{ext}");
+
+            for path in glob(&pattern).expect("failed to read glob pattern") {
+                match path {
+                    Ok(path) => paths.push(path),
+                    Err(err) => {
+                        let error_message = format!("failed to load config: {err}");
+                        let error_style = Color::Red.normal();
+                        eprintln!("{}", error_style.paint(error_message));
+                    }
+                }
+            }
+        }
+
+        paths.sort();
+        paths
     }
 }
