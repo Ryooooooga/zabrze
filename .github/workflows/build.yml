@@ -76,9 +76,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions-rs/toolchain@v1
+      - name: rust-toolchain
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          target: ${{ matrix.target }}
           default: true
 
       - name: Build
@@ -127,7 +129,7 @@ jobs:
       - name: Checkout tap
         uses: actions/checkout@v3
         with:
-          repository: 'Ryooooooga/homebrew-tap'
+          repository: "Ryooooooga/homebrew-tap"
           token: ${{ secrets.GH_ACCESS_TOKEN }}
 
       - name: Download artifacts
