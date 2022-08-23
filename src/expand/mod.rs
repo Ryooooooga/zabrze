@@ -4,14 +4,14 @@ use crate::opt::ExpandArgs;
 use shell_escape::escape;
 use std::borrow::Cow;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct ExpandResult<'a> {
     pub command: &'a str,
     pub last_arg: &'a str,
     pub expansions: Vec<Expansion<'a>>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Expansion<'a> {
     pub replacement: SnippetReplacement,
     pub left_snippet: &'a str,
@@ -21,7 +21,7 @@ pub struct Expansion<'a> {
     pub has_placeholder: bool,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct SnippetReplacement {
     pub start_index: usize,
     pub end_index: usize,
