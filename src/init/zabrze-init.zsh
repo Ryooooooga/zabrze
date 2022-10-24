@@ -7,13 +7,19 @@ __zabrze::expand() {
     local out exit_code
     out="$(zabrze expand --lbuffer="$LBUFFER" --rbuffer="$RBUFFER")"
     exit_code="$?"
-    [ "$exit_code" -eq 0 ] && eval "$out"
+    if [[ "$exit_code" -eq 0 ]] && [[ -n "$out" ]]; then
+        eval "$out"
+        if [[ -n "$ZABRZE_LOG_PATH" ]]; then
+            \command mkdir -p "${ZABRZE_LOG_PATH:a:h}"
+            \builtin printf "expand\t%s\t%s\n" "$EPOCHSECONDS" "$name" >> "$ZABRZE_LOG_PATH"
+        fi
+    fi
 }
 
 __zabrze::expand-and-self-insert() {
     zle __zabrze::expand
     zle reset-prompt
-    [ -z "$__zabrze_has_placeholder" ] && zle self-insert
+    [[ -z "$__zabrze_has_placeholder" ]] && zle self-insert
     unset __zabrze_has_placeholder
 }
 

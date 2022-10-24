@@ -13,6 +13,7 @@ pub struct ExpandResult<'a> {
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Expansion<'a> {
+    pub name: &'a str,
     pub replacement: SnippetReplacement,
     pub left_snippet: &'a str,
     pub right_snippet: &'a str,
@@ -53,6 +54,7 @@ pub fn run(args: &ExpandArgs) {
         let snippet_start_index = expansion.replacement.start_index;
         let snippet_end_index = expansion.replacement.end_index;
 
+        let name = escape(Cow::from(expansion.name));
         let lbuffer_pre = escape(Cow::from(&lbuffer[..snippet_start_index]));
         let lbuffer_post = escape(Cow::from(&lbuffer[snippet_end_index..]));
         let left_snippet = escape(Cow::from(expansion.left_snippet));
@@ -73,6 +75,7 @@ pub fn run(args: &ExpandArgs) {
             print!(r"else ");
         }
 
+        print!(r"local name={name};");
         print!(r"local left_snippet={left_snippet};");
         if expansion.has_placeholder {
             print!(r"local right_snippet={right_snippet};");
@@ -124,6 +127,7 @@ fn expand<'a>(config: &'a Config, lbuffer: &'a str) -> ExpandResult<'a> {
     let expansions = matches
         .iter()
         .map(|m| Expansion {
+            name: m.name(),
             replacement: replacement_for(
                 m.action(),
                 command_start_index,
@@ -236,6 +240,7 @@ mod tests {
                     command: "g",
                     last_arg: "g",
                     expansions: vec![Expansion {
+                        name: "git",
                         replacement: SnippetReplacement {
                             start_index: 0,
                             end_index: 1,
@@ -255,6 +260,7 @@ mod tests {
                     command: "g",
                     last_arg: "g",
                     expansions: vec![Expansion {
+                        name: "git",
                         replacement: SnippetReplacement {
                             start_index: 12,
                             end_index: 13,
@@ -274,6 +280,7 @@ mod tests {
                     command: "echo hello null",
                     last_arg: "null",
                     expansions: vec![Expansion {
+                        name: ">/dev/null",
                         replacement: SnippetReplacement {
                             start_index: 11,
                             end_index: 15,
@@ -293,6 +300,7 @@ mod tests {
                     command: "git c",
                     last_arg: "c",
                     expansions: vec![Expansion {
+                        name: "git commit",
                         replacement: SnippetReplacement {
                             start_index: 16,
                             end_index: 17,
@@ -330,6 +338,7 @@ mod tests {
                     command: "home",
                     last_arg: "home",
                     expansions: vec![Expansion {
+                        name: "$HOME",
                         replacement: SnippetReplacement {
                             start_index: 0,
                             end_index: 4,
@@ -349,6 +358,7 @@ mod tests {
                     command: "git cm",
                     last_arg: "cm",
                     expansions: vec![Expansion {
+                        name: "git commit -m ''",
                         replacement: SnippetReplacement {
                             start_index: 4,
                             end_index: 6,
@@ -368,6 +378,7 @@ mod tests {
                     command: "apt install",
                     last_arg: "install",
                     expansions: vec![Expansion {
+                        name: "sudo apt install -y",
                         replacement: SnippetReplacement {
                             start_index: 0,
                             end_index: 11,
@@ -387,6 +398,7 @@ mod tests {
                     command: "..",
                     last_arg: "..",
                     expansions: vec![Expansion {
+                        name: "cd ..",
                         replacement: SnippetReplacement {
                             start_index: 0,
                             end_index: 2,
@@ -406,6 +418,7 @@ mod tests {
                     command: "../..",
                     last_arg: "../..",
                     expansions: vec![Expansion {
+                        name: "cd ..",
                         replacement: SnippetReplacement {
                             start_index: 5,
                             end_index: 10,
@@ -426,6 +439,7 @@ mod tests {
                     last_arg: "rm",
                     expansions: vec![
                         Expansion {
+                            name: "trash",
                             replacement: SnippetReplacement {
                                 start_index: 0,
                                 end_index: 2,
@@ -437,6 +451,7 @@ mod tests {
                             has_placeholder: false,
                         },
                         Expansion {
+                            name: "rm -r",
                             replacement: SnippetReplacement {
                                 start_index: 0,
                                 end_index: 2,

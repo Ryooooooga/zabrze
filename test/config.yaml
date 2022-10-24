@@ -1,23 +1,28 @@
 abbrevs:
   # simple
-  - abbr: g
+  - name: git
+    abbr: g
     snippet: git
 
-  - abbr: ".1"
+  - name: ".1"
+    abbr: ".1"
     snippet: awk '{ print $1 }'
 
   # global
-  - abbr: ">null"
+  - name: ">null"
+    abbr: ">null"
     snippet: ">/dev/null 2>&1"
     global: true
 
   # evaluate
-  - abbr: view
+  - name: view
+    abbr: view
     snippet: ${EDITOR} -R
     evaluate: true
 
   # global+evaluate
-  - abbr: ANSWER
+  - name: "42"
+    abbr: ANSWER
     snippet: answer is $(echo $((6*7)))
     evaluate: true
     global: true
