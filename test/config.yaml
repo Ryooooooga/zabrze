@@ -55,6 +55,11 @@ abbrevs:
     snippet: "[ {} ]"
     action: replace-all
 
+  - abbr: "[["
+    snippet: "[[ 👇 ]]"
+    cursor: "👇"
+    action: replace-all
+
   # current_abbr
   - abbr-pattern: ^\.\.(/\.\.)*/?$
     snippet: cd $abbr

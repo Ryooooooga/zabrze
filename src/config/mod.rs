@@ -44,7 +44,7 @@ impl Config {
         let mut config: Config = Default::default();
 
         for path in &Self::config_file_paths(&config_dir) {
-            match Self::load_from_file(&path) {
+            match Self::load_from_file(path) {
                 Ok(c) => config.merge(c),
                 Err(err) => {
                     let error_message =

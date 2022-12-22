@@ -33,6 +33,9 @@ pub struct Abbrev {
 
     pub snippet: String,
 
+    #[serde(default = "default_cursor")]
+    pub cursor: String,
+
     #[serde(default)]
     pub action: Action,
 
@@ -103,11 +106,9 @@ impl Abbrev {
             return None;
         }
 
-        const PLACEHOLDER: &str = "{}";
-
         let matched_snippet = self
             .snippet
-            .split_once(PLACEHOLDER)
+            .split_once(&self.cursor)
             .map(|(left, right)| MatchedSnippet::WithPlaceholder { left, right })
             .unwrap_or_else(|| MatchedSnippet::Simple(&self.snippet));
 
@@ -196,6 +197,7 @@ mod tests {
                     name: None,
                     trigger: Trigger::Abbr("test".to_string()),
                     snippet: "TEST".to_string(),
+                    cursor: "{}".to_string(),
                     action: Action::ReplaceLast,
                     context: None,
                     condition: None,
@@ -216,6 +218,7 @@ mod tests {
                     name: None,
                     trigger: Trigger::Abbr("test".to_string()),
                     snippet: "TEST".to_string(),
+                    cursor: "{}".to_string(),
                     action: Action::ReplaceLast,
                     context: None,
                     condition: None,
@@ -232,6 +235,7 @@ mod tests {
                     name: None,
                     trigger: Trigger::Abbr("test".to_string()),
                     snippet: "TEST".to_string(),
+                    cursor: "{}".to_string(),
                     action: Action::ReplaceLast,
                     context: None,
                     condition: None,
@@ -252,6 +256,7 @@ mod tests {
                     name: None,
                     trigger: Trigger::Abbr("test".to_string()),
                     snippet: "TEST".to_string(),
+                    cursor: "{}".to_string(),
                     action: Action::ReplaceLast,
                     context: Some("^echo ".to_string()),
                     condition: None,
@@ -272,6 +277,7 @@ mod tests {
                     name: None,
                     trigger: Trigger::Abbr("test".to_string()),
                     snippet: "TEST".to_string(),
+                    cursor: "{}".to_string(),
                     action: Action::ReplaceLast,
                     context: Some("^printf ".to_string()),
                     condition: None,
@@ -288,6 +294,7 @@ mod tests {
                     name: None,
                     trigger: Trigger::Abbr("test".to_string()),
                     snippet: "TEST".to_string(),
+                    cursor: "{}".to_string(),
                     action: Action::ReplaceLast,
                     context: Some("(echo".to_string()),
                     condition: None,
@@ -304,6 +311,28 @@ mod tests {
                     name: None,
                     trigger: Trigger::Abbr("test".to_string()),
                     snippet: "TE{}ST".to_string(),
+                    cursor: "{}".to_string(),
+                    action: Action::ReplaceLast,
+                    context: None,
+                    condition: None,
+                    global: false,
+                    evaluate: false,
+                },
+                command: "test",
+                last_arg: "test",
+                expected: Some(TestMatch {
+                    left: "TE",
+                    right: "ST",
+                    has_placeholder: true,
+                }),
+            },
+            Scenario {
+                testname: "should match with custom placeholder",
+                abbr: Abbrev {
+                    name: None,
+                    trigger: Trigger::Abbr("test".to_string()),
+                    snippet: "TE👇ST".to_string(),
+                    cursor: "👇".to_string(),
                     action: Action::ReplaceLast,
                     context: None,
                     condition: None,
@@ -324,6 +353,7 @@ mod tests {
                     name: None,
                     trigger: Trigger::Regex(r"\.py$".to_string()),
                     snippet: "python3".to_string(),
+                    cursor: "{}".to_string(),
                     action: Action::ReplaceLast,
                     context: None,
                     condition: None,
@@ -359,6 +389,10 @@ mod tests {
             }
         }
     }
+}
+
+fn default_cursor() -> String {
+    "{}".to_string()
 }
 
 fn default_as_false() -> bool {
