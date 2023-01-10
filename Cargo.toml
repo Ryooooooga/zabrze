@@ -1,6 +1,6 @@
 [package]
 name = "zabrze"
-version = "0.2.2"
+version = "0.2.3"
 authors = ['Ryooooooga <eial5q265e5@gmail.com>']
 description = 'ZSH abbreviation exapansion plugin'
 license = 'MIT'
@@ -10,14 +10,14 @@ keywords = [
     'zsh',
     'zsh-plugin',
 ]
-edition = '2018'
+edition = '2021'
 
 [dependencies]
 ansi_term = "0.12"
+clap = { version = "4.0", features = ["derive"] }
 glob = "0.3"
 regex = "1.5"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
 shell-escape = "0.1"
-structopt = "0.3"
 thiserror = "1.0"

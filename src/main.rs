@@ -4,6 +4,7 @@ mod init;
 mod list;
 mod opt;
 
+use clap::Parser;
 use opt::{Opt, Subcommand};
 
 fn main() {

@@ -1,51 +1,39 @@
-use structopt::{clap, StructOpt};
-
-#[derive(Debug, StructOpt)]
-#[structopt(
-    name = clap::crate_name!(),
-    version = clap::crate_version!(),
-    author = clap::crate_authors!(),
-    about = clap::crate_description!(),
-    version_short = "v",
-    setting(clap::AppSettings::ColoredHelp),
-)]
+#[derive(Debug, clap::Parser)]
+#[command(version, disable_version_flag = true, author, about)]
 pub struct Opt {
-    #[structopt(subcommand)]
+    #[arg(short, long, help = "Print version information", action=clap::ArgAction::Version)]
+    pub version: Option<bool>,
+
+    #[command(subcommand)]
     pub subcommand: Subcommand,
 }
 
-impl Opt {
-    pub fn parse() -> Self {
-        Self::from_args()
-    }
-}
-
-#[derive(Debug, StructOpt)]
+#[derive(Debug, clap::Subcommand)]
 pub enum Subcommand {
-    #[structopt(about = "Initialize the plugin")]
+    #[command(about = "Initialize the plugin")]
     Init(InitArgs),
 
-    #[structopt(about = "List abbreviations")]
+    #[command(about = "List abbreviations")]
     List(ListArgs),
 
-    #[structopt(about = "Expand abbreviation")]
+    #[command(about = "Expand abbreviation")]
     Expand(ExpandArgs),
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, clap::Args)]
 pub struct InitArgs {
-    #[structopt(help = "Enable default key bindings", long)]
+    #[arg(help = "Enable default key bindings", long)]
     pub bind_keys: bool,
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, clap::Args)]
 pub struct ListArgs {}
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, clap::Args)]
 pub struct ExpandArgs {
-    #[structopt(help = "$LBUFFER", long, short = "l")]
+    #[arg(help = "$LBUFFER", long, short = 'l')]
     pub lbuffer: String,
 
-    #[structopt(help = "$RBUFFER", long, short = "r")]
+    #[arg(help = "$RBUFFER", long, short = 'r')]
     pub rbuffer: String,
 }
