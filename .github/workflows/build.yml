@@ -110,7 +110,7 @@ jobs:
           else
             zip "./${ASSET}" "${EXECUTABLE}"
           fi
-          echo "::set-output name=asset::${ASSET}"
+          echo "asset=${ASSET}" >>$GITHUB_OUTPUT
         shell: bash
 
       - name: Upload artifact
@@ -147,11 +147,11 @@ jobs:
           mv "artifact-aarch64-apple-darwin/${NAME}.tar.gz" "./${NAME}-${TAG}-aarch64-apple-darwin.tar.gz"
           mv "artifact-aarch64-unknown-linux-gnu/${NAME}.tar.gz" "./${NAME}-${TAG}-aarch64-unknown-linux-gnu.tar.gz"
 
-          echo "::set-output name=asset-x86_64-apple-darwin::${NAME}-${TAG}-x86_64-apple-darwin.tar.gz"
-          echo "::set-output name=asset-x86_64-unknown-linux-gnu::${NAME}-${TAG}-x86_64-unknown-linux-gnu.tar.gz"
-          echo "::set-output name=asset-x86_64-pc-windows-gnu::${NAME}-${TAG}-x86_64-pc-windows-gnu.zip"
-          echo "::set-output name=asset-aarch64-apple-darwin::${NAME}-${TAG}-aarch64-apple-darwin.tar.gz"
-          echo "::set-output name=asset-aarch64-unknown-linux-gnu::${NAME}-${TAG}-aarch64-unknown-linux-gnu.tar.gz"
+          echo "asset-x86_64-apple-darwin=${NAME}-${TAG}-x86_64-apple-darwin.tar.gz" >>$GITHUB_OUTPUT
+          echo "asset-x86_64-unknown-linux-gnu=${NAME}-${TAG}-x86_64-unknown-linux-gnu.tar.gz" >>$GITHUB_OUTPUT
+          echo "asset-x86_64-pc-windows-gnu=${NAME}-${TAG}-x86_64-pc-windows-gnu.zip" >>$GITHUB_OUTPUT
+          echo "asset-aarch64-apple-darwin=${NAME}-${TAG}-aarch64-apple-darwin.tar.gz" >>$GITHUB_OUTPUT
+          echo "asset-aarch64-unknown-linux-gnu=${NAME}-${TAG}-aarch64-unknown-linux-gnu.tar.gz" >>$GITHUB_OUTPUT
 
       - name: Checksum
         run: >
