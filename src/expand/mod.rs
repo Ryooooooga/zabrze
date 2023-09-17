@@ -45,10 +45,6 @@ pub fn run(args: &ExpandArgs) {
     print!(r#"local command={command};"#);
     print!(r#"local abbr={abbr};"#);
 
-    // Deprecation: `$current_command` and `$current_abbr` is deprecated, use `$command` and `$abbr` instead.
-    print!(r#"local current_command={command};"#);
-    print!(r#"local current_abbr={abbr};"#);
-
     let mut has_if = false;
     for expansion in &result.expansions {
         let snippet_start_index = expansion.replacement.start_index;
