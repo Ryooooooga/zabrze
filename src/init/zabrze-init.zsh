@@ -9,10 +9,6 @@ __zabrze::expand() {
     exit_code="$?"
     if [[ "$exit_code" -eq 0 ]] && [[ -n "$out" ]]; then
         eval "$out"
-        if [[ -n "$ZABRZE_LOG_PATH" ]]; then
-            \command mkdir -p "${ZABRZE_LOG_PATH:a:h}"
-            \builtin printf "expand\t%s\t%s\n" "$EPOCHSECONDS" "$name" >> "$ZABRZE_LOG_PATH"
-        fi
     fi
 }
 

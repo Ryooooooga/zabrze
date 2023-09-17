@@ -60,7 +60,7 @@ abbrevs:
     cursor: "👇"
     action: replace-all
 
-  # current_abbr
+  # $abbr
   - abbr-pattern: ^\.\.(/\.\.)*/?$
     snippet: cd $abbr
     evaluate: true
