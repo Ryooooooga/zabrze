@@ -1,7 +1,7 @@
 pub mod abbrev;
 pub mod config_path;
 
-pub use abbrev::{Abbrev, Action, Trigger};
+pub use abbrev::{Abbrev, Trigger};
 pub use config_path::get_default_config_dir;
 
 use ansi_term::Color;
