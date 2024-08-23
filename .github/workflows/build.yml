@@ -195,8 +195,9 @@ jobs:
           commit_message: brew formula update for zabrze
 
       - name: Upload
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
+          generate_release_notes: true
           files: |
             checksum.txt
             ${{ steps.asset.outputs.asset-x86_64-apple-darwin }}
