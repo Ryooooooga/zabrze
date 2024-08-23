@@ -60,6 +60,10 @@ abbrevs:
     cursor: "👇"
     action: replace-all
 
+  - abbr: "xargsi"
+    snippet: "xargs -I{} "
+    cursor: null
+
   # $abbr
   - abbr-pattern: ^\.\.(/\.\.)*/?$
     snippet: cd $abbr
