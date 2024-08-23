@@ -62,6 +62,13 @@ abbrevs:
     snippet: commit
     global: true
     context: '^git\s'
+    
+  - name: git commit -m
+    abbr: cm
+    snippet: commit -m '{}'
+    cursor: "{}" # optional; defaults to "{}"
+    global: true
+    context: '^git\s'
 
   - name: branch name
     abbr: B
@@ -75,6 +82,10 @@ abbrevs:
 $ git c<SP>
 #  ↓ expanded
 $ git commit
+
+$ git cm<SP>
+#  ↓ expanded and move into quotes
+$ git commit -m '|'
 
 $ git push -d origin B<CR>
 #  ↓ expanded and executed
