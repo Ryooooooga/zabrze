@@ -407,7 +407,7 @@ mod tests {
                     );
                 }
                 (None, None) => { /* ok */ }
-                _ => assert!(false, "{}", s.testname),
+                _ => panic!("{}", s.testname),
             }
         }
     }

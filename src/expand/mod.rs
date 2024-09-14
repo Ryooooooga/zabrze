@@ -472,7 +472,7 @@ mod tests {
 }
 
 fn find_last_command_index(line: &str) -> usize {
-    line.rfind(|c| matches!(c, ';' | '&' | '|' | '(' | '`' | '\n'))
+    line.rfind([';', '&', '|', '(', '`', '\n'])
         .map(|i| i + 1)
         .unwrap_or(0)
 }
