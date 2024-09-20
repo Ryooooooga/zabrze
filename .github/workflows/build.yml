@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: rustup component add
         run: rustup component add rustfmt
@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Build
         run: cargo build --verbose
@@ -72,7 +72,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -127,7 +127,7 @@ jobs:
 
     steps:
       - name: Checkout tap
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: "Ryooooooga/homebrew-tap"
           token: ${{ secrets.GH_ACCESS_TOKEN }}
@@ -214,7 +214,7 @@ jobs:
     needs: [release]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: katyo/publish-crates@v1
         with:
