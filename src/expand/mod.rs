@@ -14,18 +14,12 @@ pub struct ExpandResult<'a> {
 #[derive(Debug, Eq, PartialEq)]
 pub struct Expansion<'a> {
     pub name: &'a str,
-    pub replacement: SnippetReplacement,
+    pub replacing_index: usize,
     pub left_snippet: &'a str,
     pub right_snippet: &'a str,
     pub condition: Option<&'a str>,
     pub evaluate: bool,
     pub has_placeholder: bool,
-}
-
-#[derive(Debug, Eq, PartialEq)]
-pub struct SnippetReplacement {
-    pub start_index: usize,
-    pub end_index: usize,
 }
 
 pub fn run(args: &ExpandArgs) {
@@ -47,12 +41,8 @@ pub fn run(args: &ExpandArgs) {
 
     let mut has_if = false;
     for expansion in &result.expansions {
-        let snippet_start_index = expansion.replacement.start_index;
-        let snippet_end_index = expansion.replacement.end_index;
-
         let name = escape(Cow::from(expansion.name));
-        let lbuffer_pre = escape(Cow::from(&lbuffer[..snippet_start_index]));
-        let lbuffer_post = escape(Cow::from(&lbuffer[snippet_end_index..]));
+        let lbuffer_pre = escape(Cow::from(&lbuffer[..expansion.replacing_index]));
         let left_snippet = escape(Cow::from(expansion.left_snippet));
         let right_snippet = escape(Cow::from(expansion.right_snippet));
         let condition = expansion.condition.map(|c| escape(Cow::from(c)));
@@ -76,10 +66,10 @@ pub fn run(args: &ExpandArgs) {
         if expansion.has_placeholder {
             print!(r"local right_snippet={right_snippet};");
             print!(r#"LBUFFER={lbuffer_pre}"${{{evaluate}left_snippet}}";"#);
-            print!(r#"RBUFFER="${{{evaluate}right_snippet}}"{lbuffer_post}{rbuffer};"#);
+            print!(r#"RBUFFER="${{{evaluate}right_snippet}}"{rbuffer};"#);
             print!(r"__zabrze_has_placeholder=1;");
         } else {
-            print!(r#"LBUFFER={lbuffer_pre}"${{{evaluate}left_snippet}}"{lbuffer_post};"#);
+            print!(r#"LBUFFER={lbuffer_pre}"${{{evaluate}left_snippet}}";"#);
             print!(r#"RBUFFER={rbuffer};"#);
             print!(r"__zabrze_has_placeholder=;");
         }
@@ -107,7 +97,6 @@ fn expand<'a>(config: &'a Config, lbuffer: &'a str) -> ExpandResult<'a> {
         .unwrap_or(("", command));
 
     let command_start_index = lbuffer.len() - command.len();
-    let command_end_index = lbuffer.len();
     let last_arg_start_index = lbuffer.len() - last_arg.len();
 
     if last_arg.is_empty() {
@@ -124,12 +113,10 @@ fn expand<'a>(config: &'a Config, lbuffer: &'a str) -> ExpandResult<'a> {
         .iter()
         .map(|m| Expansion {
             name: m.name(),
-            replacement: replacement_for(
-                m.action(),
-                command_start_index,
-                command_end_index,
-                last_arg_start_index,
-            ),
+            replacing_index: match m.action() {
+                Action::ReplaceLast => last_arg_start_index,
+                Action::ReplaceAll => command_start_index,
+            },
             left_snippet: m.left_snippet(),
             right_snippet: m.right_snippet(),
             condition: m.condition(),
@@ -237,10 +224,7 @@ mod tests {
                     last_arg: "g",
                     expansions: vec![Expansion {
                         name: "git",
-                        replacement: SnippetReplacement {
-                            start_index: 0,
-                            end_index: 1,
-                        },
+                        replacing_index: 0,
                         left_snippet: "git",
                         right_snippet: "",
                         condition: None,
@@ -257,10 +241,7 @@ mod tests {
                     last_arg: "g",
                     expansions: vec![Expansion {
                         name: "git",
-                        replacement: SnippetReplacement {
-                            start_index: 12,
-                            end_index: 13,
-                        },
+                        replacing_index: 12,
                         left_snippet: "git",
                         right_snippet: "",
                         condition: None,
@@ -277,10 +258,7 @@ mod tests {
                     last_arg: "null",
                     expansions: vec![Expansion {
                         name: ">/dev/null",
-                        replacement: SnippetReplacement {
-                            start_index: 11,
-                            end_index: 15,
-                        },
+                        replacing_index: 11,
                         left_snippet: ">/dev/null",
                         right_snippet: "",
                         condition: None,
@@ -297,10 +275,7 @@ mod tests {
                     last_arg: "c",
                     expansions: vec![Expansion {
                         name: "git commit",
-                        replacement: SnippetReplacement {
-                            start_index: 16,
-                            end_index: 17,
-                        },
+                        replacing_index: 16,
                         left_snippet: "commit",
                         right_snippet: "",
                         condition: None,
@@ -335,10 +310,7 @@ mod tests {
                     last_arg: "home",
                     expansions: vec![Expansion {
                         name: "$HOME",
-                        replacement: SnippetReplacement {
-                            start_index: 0,
-                            end_index: 4,
-                        },
+                        replacing_index: 0,
                         left_snippet: "$HOME",
                         right_snippet: "",
                         condition: None,
@@ -355,10 +327,7 @@ mod tests {
                     last_arg: "cm",
                     expansions: vec![Expansion {
                         name: "git commit -m ''",
-                        replacement: SnippetReplacement {
-                            start_index: 4,
-                            end_index: 6,
-                        },
+                        replacing_index: 4,
                         left_snippet: "commit -m '",
                         right_snippet: "'",
                         condition: None,
@@ -375,10 +344,7 @@ mod tests {
                     last_arg: "install",
                     expansions: vec![Expansion {
                         name: "sudo apt install -y",
-                        replacement: SnippetReplacement {
-                            start_index: 0,
-                            end_index: 11,
-                        },
+                        replacing_index: 0,
                         left_snippet: "sudo apt install -y",
                         right_snippet: "",
                         condition: Some("(( ${+commands[apt]} ))"),
@@ -395,10 +361,7 @@ mod tests {
                     last_arg: "..",
                     expansions: vec![Expansion {
                         name: "cd ..",
-                        replacement: SnippetReplacement {
-                            start_index: 0,
-                            end_index: 2,
-                        },
+                        replacing_index: 0,
                         left_snippet: "cd $abbr",
                         right_snippet: "",
                         condition: None,
@@ -415,10 +378,7 @@ mod tests {
                     last_arg: "../..",
                     expansions: vec![Expansion {
                         name: "cd ..",
-                        replacement: SnippetReplacement {
-                            start_index: 5,
-                            end_index: 10,
-                        },
+                        replacing_index: 5,
                         left_snippet: "cd $abbr",
                         right_snippet: "",
                         condition: None,
@@ -436,10 +396,7 @@ mod tests {
                     expansions: vec![
                         Expansion {
                             name: "trash",
-                            replacement: SnippetReplacement {
-                                start_index: 0,
-                                end_index: 2,
-                            },
+                            replacing_index: 0,
                             left_snippet: "trash",
                             right_snippet: "",
                             condition: Some("(( ${+commands[trash]} ))"),
@@ -448,10 +405,7 @@ mod tests {
                         },
                         Expansion {
                             name: "rm -r",
-                            replacement: SnippetReplacement {
-                                start_index: 0,
-                                end_index: 2,
-                            },
+                            replacing_index: 0,
                             left_snippet: "rm -r",
                             right_snippet: "",
                             condition: None,
@@ -499,22 +453,4 @@ fn find_matches<'a>(abbrevs: &'a [Abbrev], command: &'a str, last_arg: &'a str) 
         }
     }
     matches
-}
-
-fn replacement_for(
-    action: &Action,
-    command_start_index: usize,
-    command_end_index: usize,
-    last_arg_start_index: usize,
-) -> SnippetReplacement {
-    match action {
-        Action::ReplaceLast => SnippetReplacement {
-            start_index: last_arg_start_index,
-            end_index: command_end_index,
-        },
-        Action::ReplaceAll => SnippetReplacement {
-            start_index: command_start_index,
-            end_index: command_end_index,
-        },
-    }
 }
