@@ -127,10 +127,6 @@ pub struct Match<'a> {
 }
 
 impl<'a> Match<'a> {
-    pub fn name(&self) -> &'a str {
-        self.abbrev.name.as_deref().unwrap_or("")
-    }
-
     pub fn left_snippet(&self) -> &'a str {
         match self.matched_snippet {
             MatchedSnippet::Simple(s) => s,
