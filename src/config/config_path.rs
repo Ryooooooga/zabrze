@@ -34,9 +34,8 @@ fn get_default_dir<C: ConfigPath>(c: &C) -> Option<String> {
     }
 
     let home = c.env(HOME_ENV_KEY)?;
-    return home
-        .to_str()
-        .map(|home| format!("{home}/.config/{DEFAULT_CONFIG_DIR}"));
+    home.to_str()
+        .map(|home| format!("{home}/.config/{DEFAULT_CONFIG_DIR}"))
 }
 
 pub fn get_default_config_dir() -> Option<String> {
