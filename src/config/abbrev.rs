@@ -10,6 +10,18 @@ pub enum Trigger {
     Regex(String),
 }
 
+impl Trigger {
+    fn match_pattern(&self, last_arg: &str) -> Result<bool, regex::Error> {
+        match self {
+            Trigger::Abbr(abbr) => Ok(abbr == last_arg),
+            Trigger::Regex(regex) => {
+                let pattern = Regex::new(regex)?;
+                Ok(pattern.is_match(last_arg))
+            }
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Action {
     #[serde(rename = "replace-last")]
@@ -53,57 +65,30 @@ pub struct Abbrev {
 
 impl Abbrev {
     pub fn do_match(&self, command: &str, last_arg: &str) -> Option<Match> {
-        if !(self.global || command == last_arg) {
-            return None;
-        }
-
-        // Check trigger pattern
-        match &self.trigger {
-            Trigger::Abbr(abbr) => {
-                if abbr != last_arg {
-                    return None;
-                }
-            }
-            Trigger::Regex(regex) => {
-                let pattern = match Regex::new(regex) {
-                    Ok(pattern) => pattern,
-                    Err(error) => {
-                        let name = self.name.as_ref().unwrap_or(&self.snippet);
-                        let error_message =
-                            format!("invalid regex in abbrev '{}': {}", name, error);
-                        let error_style = Color::Red.normal();
-
-                        eprintln!("{}", error_style.paint(error_message));
-                        return None;
-                    }
-                };
-
-                if !pattern.is_match(last_arg) {
-                    return None;
-                }
-            }
-        }
-
-        // Check context
-        let context_opt = match self.context.as_ref().map(|ctx| Regex::new(ctx)) {
-            Some(Ok(context)) => Some(context),
-            Some(Err(error)) => {
+        match self.do_match_impl(command, last_arg) {
+            Ok(m) => m,
+            Err(error) => {
                 let name = self.name.as_ref().unwrap_or(&self.snippet);
                 let error_message = format!("invalid regex in abbrev '{}': {}", name, error);
                 let error_style = Color::Red.normal();
 
                 eprintln!("{}", error_style.paint(error_message));
-                return None;
+                None
             }
-            None => None,
-        };
+        }
+    }
 
-        let is_context_matched = context_opt
-            .map(|context| context.is_match(command))
-            .unwrap_or(true);
+    fn do_match_impl(&self, command: &str, last_arg: &str) -> Result<Option<Match>, regex::Error> {
+        if !(self.global || command == last_arg) {
+            return Ok(None);
+        }
 
-        if !is_context_matched {
-            return None;
+        if !self.trigger.match_pattern(last_arg)? {
+            return Ok(None);
+        }
+
+        if !self.match_context(command)? {
+            return Ok(None);
         }
 
         let matched_snippet = self
@@ -113,10 +98,20 @@ impl Abbrev {
             .map(|(left, right)| MatchedSnippet::WithPlaceholder { left, right })
             .unwrap_or_else(|| MatchedSnippet::Simple(&self.snippet));
 
-        Some(Match {
+        Ok(Some(Match {
             abbrev: self,
             matched_snippet,
-        })
+        }))
+    }
+
+    fn match_context(&self, command: &str) -> Result<bool, regex::Error> {
+        let context = match &self.context {
+            Some(context) => context,
+            None => return Ok(true), // No context means always match
+        };
+
+        let context_pattern = Regex::new(context)?;
+        Ok(context_pattern.is_match(command))
     }
 }
 
