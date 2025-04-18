@@ -1,6 +1,13 @@
 use ansi_term::Color;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum ExpandError {
+    #[error("invalid regex: {0}")]
+    RegexError(#[from] regex::Error),
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Trigger {
@@ -11,7 +18,7 @@ pub enum Trigger {
 }
 
 impl Trigger {
-    fn match_pattern(&self, last_arg: &str) -> Result<bool, regex::Error> {
+    fn match_pattern(&self, last_arg: &str) -> Result<bool, ExpandError> {
         match self {
             Trigger::Abbr(abbr) => Ok(abbr == last_arg),
             Trigger::Regex(regex) => {
@@ -69,7 +76,7 @@ impl Abbrev {
             Ok(m) => m,
             Err(error) => {
                 let name = self.name.as_ref().unwrap_or(&self.snippet);
-                let error_message = format!("invalid regex in abbrev '{}': {}", name, error);
+                let error_message = format!("abbrev '{}': {}", name, error);
                 let error_style = Color::Red.normal();
 
                 eprintln!("{}", error_style.paint(error_message));
@@ -78,7 +85,7 @@ impl Abbrev {
         }
     }
 
-    fn do_match_impl(&self, command: &str, last_arg: &str) -> Result<Option<Match>, regex::Error> {
+    fn do_match_impl(&self, command: &str, last_arg: &str) -> Result<Option<Match>, ExpandError> {
         if !(self.global || command == last_arg) {
             return Ok(None);
         }
@@ -104,7 +111,7 @@ impl Abbrev {
         }))
     }
 
-    fn match_context(&self, command: &str) -> Result<bool, regex::Error> {
+    fn match_context(&self, command: &str) -> Result<bool, ExpandError> {
         let context = match &self.context {
             Some(context) => context,
             None => return Ok(true), // No context means always match
