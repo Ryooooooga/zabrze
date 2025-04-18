@@ -4,10 +4,6 @@ abbrevs:
     abbr: g
     snippet: git
 
-  - name: ".1"
-    abbr: ".1"
-    snippet: awk '{ print $1 }'
-
   # global
   - name: ">null"
     abbr: ">null"
@@ -92,3 +88,9 @@ abbrevs:
 
   - abbr: cond3
     snippet: conditional fallback
+
+  # capture
+  - name: ".N"
+    abbr-pattern: ^\.(?<n>\d+)$
+    snippet: awk '{ print \$$n }'
+    evaluate: true

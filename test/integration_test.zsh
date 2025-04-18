@@ -51,7 +51,6 @@ try "g"             "add"       "git"                           "add"           
 try "g"             " add"      "git"                           " add"          ""
 try "echo g"        ""          "echo g"                        ""              ""
 try "echo a; g"     ""          "echo a; git"                   ""              ""
-try "cat a | .1"    ""          "cat a | awk '{ print \$1 }'"   ""              ""
 try "view"          "a.txt"     "vim -R"                        "a.txt"         ""
 try "echo ANSWER"   ""          "echo answer is 42"             ""              ""
 try "ANSWER"        ""          "answer is 42"                  ""              ""
@@ -75,6 +74,8 @@ try "cond"          ""          "conditional abbrev"            ""              
 try "cond2"         ""          "cond2"                         ""              ""
 try "cond3"         ""          "conditional fallback"          ""              ""
 try "2"             ""          "otherfile"                     ""              ""
+try "cat a | .1"    ""          "cat a | awk '{ print \$1 }'"   ""              ""
+try "cat a | .2"    ""          "cat a | awk '{ print \$2 }'"   ""              ""
 
 if [ "$result" -ne 0 ]; then
     echo "test failed!!" >/dev/stderr

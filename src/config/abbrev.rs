@@ -18,15 +18,43 @@ pub enum Trigger {
 }
 
 impl Trigger {
-    fn match_pattern(&self, last_arg: &str) -> Result<bool, ExpandError> {
+    fn match_pattern<'a>(
+        &'a self,
+        last_arg: &'a str,
+    ) -> Result<Option<Vec<Capture<'a>>>, ExpandError> {
         match self {
-            Trigger::Abbr(abbr) => Ok(abbr == last_arg),
+            Trigger::Abbr(abbr) if abbr == last_arg => Ok(Some(vec![])),
+            Trigger::Abbr(_) => Ok(None),
             Trigger::Regex(regex) => {
                 let pattern = Regex::new(regex)?;
-                Ok(pattern.is_match(last_arg))
+
+                let matches = pattern.captures(last_arg);
+                let matches = match matches {
+                    Some(matches) => matches,
+                    None => return Ok(None),
+                };
+
+                let captures = pattern
+                    .capture_names()
+                    .flatten()
+                    .filter_map(|name| {
+                        matches.name(name).map(|value| Capture {
+                            name: name.to_string(),
+                            value: value.as_str(),
+                        })
+                    })
+                    .collect();
+
+                Ok(Some(captures))
             }
         }
     }
+}
+
+#[derive(Debug, Eq, PartialEq)]
+pub struct Capture<'a> {
+    pub name: String,
+    pub value: &'a str,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -71,7 +99,7 @@ pub struct Abbrev {
 }
 
 impl Abbrev {
-    pub fn do_match(&self, command: &str, last_arg: &str) -> Option<Match> {
+    pub fn do_match<'a>(&'a self, command: &str, last_arg: &'a str) -> Option<Match<'a>> {
         match self.do_match_impl(command, last_arg) {
             Ok(m) => m,
             Err(error) => {
@@ -85,14 +113,19 @@ impl Abbrev {
         }
     }
 
-    fn do_match_impl(&self, command: &str, last_arg: &str) -> Result<Option<Match>, ExpandError> {
+    fn do_match_impl<'a>(
+        &'a self,
+        command: &str,
+        last_arg: &'a str,
+    ) -> Result<Option<Match<'a>>, ExpandError> {
         if !(self.global || command == last_arg) {
             return Ok(None);
         }
 
-        if !self.trigger.match_pattern(last_arg)? {
-            return Ok(None);
-        }
+        let captures = match self.trigger.match_pattern(last_arg)? {
+            Some(captures) => captures,
+            None => return Ok(None),
+        };
 
         if !self.match_context(command)? {
             return Ok(None);
@@ -108,6 +141,7 @@ impl Abbrev {
         Ok(Some(Match {
             abbrev: self,
             matched_snippet,
+            captures,
         }))
     }
 
@@ -126,6 +160,7 @@ impl Abbrev {
 pub struct Match<'a> {
     abbrev: &'a Abbrev,
     matched_snippet: MatchedSnippet<'a>,
+    pub captures: Vec<Capture<'a>>,
 }
 
 impl<'a> Match<'a> {
@@ -144,10 +179,10 @@ impl<'a> Match<'a> {
     }
 
     pub fn has_placeholder(&self) -> bool {
-        match self.matched_snippet {
-            MatchedSnippet::Simple(_) => false,
-            MatchedSnippet::WithPlaceholder { left: _, right: _ } => true,
-        }
+        matches!(
+            self.matched_snippet,
+            MatchedSnippet::WithPlaceholder { left: _, right: _ }
+        )
     }
 
     pub fn action(&self) -> &'a Action {
@@ -175,9 +210,15 @@ mod tests {
 
     #[test]
     fn test_do_match() {
-        pub struct TestMatch {
+        struct TestCapture {
+            name: &'static str,
+            value: &'static str,
+        }
+
+        struct TestMatch {
             left: &'static str,
             right: &'static str,
+            captures: &'static [TestCapture],
             has_placeholder: bool,
         }
 
@@ -208,6 +249,7 @@ mod tests {
                 expected: Some(TestMatch {
                     left: "TEST",
                     right: "",
+                    captures: &[],
                     has_placeholder: false,
                 }),
             },
@@ -246,6 +288,7 @@ mod tests {
                 expected: Some(TestMatch {
                     left: "TEST",
                     right: "",
+                    captures: &[],
                     has_placeholder: false,
                 }),
             },
@@ -267,6 +310,7 @@ mod tests {
                 expected: Some(TestMatch {
                     left: "TEST",
                     right: "",
+                    captures: &[],
                     has_placeholder: false,
                 }),
             },
@@ -322,6 +366,7 @@ mod tests {
                 expected: Some(TestMatch {
                     left: "TE",
                     right: "ST",
+                    captures: &[],
                     has_placeholder: true,
                 }),
             },
@@ -343,6 +388,7 @@ mod tests {
                 expected: Some(TestMatch {
                     left: "TE{}ST",
                     right: "",
+                    captures: &[],
                     has_placeholder: false,
                 }),
             },
@@ -364,6 +410,7 @@ mod tests {
                 expected: Some(TestMatch {
                     left: "TE",
                     right: "ST",
+                    captures: &[],
                     has_placeholder: true,
                 }),
             },
@@ -385,6 +432,57 @@ mod tests {
                 expected: Some(TestMatch {
                     left: "python3",
                     right: "",
+                    captures: &[],
+                    has_placeholder: false,
+                }),
+            },
+            Scenario {
+                testname: "should capture named groups (?P<...>)",
+                abbr: Abbrev {
+                    name: None,
+                    trigger: Trigger::Regex(r"^\.(?P<digits>\d+)$".to_string()),
+                    snippet: r".\$$n".to_string(),
+                    cursor: Some("{}".to_string()),
+                    action: Action::ReplaceLast,
+                    context: None,
+                    condition: None,
+                    global: false,
+                    evaluate: false,
+                },
+                command: ".3",
+                last_arg: ".3",
+                expected: Some(TestMatch {
+                    left: r".\$$n",
+                    right: "",
+                    captures: &[TestCapture {
+                        name: "digits",
+                        value: "3",
+                    }],
+                    has_placeholder: false,
+                }),
+            },
+            Scenario {
+                testname: "should capture named groups (?<...>)",
+                abbr: Abbrev {
+                    name: None,
+                    trigger: Trigger::Regex(r"^\.(?<digits>\d+)$".to_string()),
+                    snippet: r".\$$n".to_string(),
+                    cursor: Some("{}".to_string()),
+                    action: Action::ReplaceLast,
+                    context: None,
+                    condition: None,
+                    global: false,
+                    evaluate: false,
+                },
+                command: ".42",
+                last_arg: ".42",
+                expected: Some(TestMatch {
+                    left: r".\$$n",
+                    right: "",
+                    captures: &[TestCapture {
+                        name: "digits",
+                        value: "42",
+                    }],
                     has_placeholder: false,
                 }),
             },
@@ -397,6 +495,26 @@ mod tests {
                 (Some(actual), Some(expected)) => {
                     assert_eq!(actual.left_snippet(), expected.left, "{}", s.testname);
                     assert_eq!(actual.right_snippet(), expected.right, "{}", s.testname);
+
+                    assert_eq!(
+                        actual.captures.len(),
+                        expected.captures.len(),
+                        "{}",
+                        s.testname
+                    );
+                    for (i, capture) in actual.captures.iter().enumerate() {
+                        assert_eq!(
+                            capture.name, expected.captures[i].name,
+                            "{}.captures[{i}]",
+                            s.testname
+                        );
+                        assert_eq!(
+                            capture.value, expected.captures[i].value,
+                            "{}.captures[{i}]",
+                            s.testname
+                        );
+                    }
+
                     assert_eq!(
                         actual.has_placeholder(),
                         expected.has_placeholder,
