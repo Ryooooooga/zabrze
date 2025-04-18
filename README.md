@@ -116,6 +116,12 @@ abbrevs:
 ```yaml
 abbrevs:
   - name: python3 *.py
+    abbr-pattern: ^(?<file>.+\.py)$
+    snippet: python3 $file
+    evaluate: true
+
+  # or
+  - name: python3 *.py
     abbr-pattern: \.py$
     snippet: python3 $abbr
     evaluate: true
