@@ -12,11 +12,18 @@ pub struct ExpandResult<'a> {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+pub struct ExpansionVariable<'a> {
+    pub name: String,
+    pub value: &'a str,
+}
+
+#[derive(Debug, Eq, PartialEq)]
 pub struct Expansion<'a> {
     pub replacing_index: usize,
     pub left_snippet: &'a str,
     pub right_snippet: &'a str,
     pub condition: Option<&'a str>,
+    pub variables: Vec<ExpansionVariable<'a>>,
     pub evaluate: bool,
     pub has_placeholder: bool,
 }
@@ -57,6 +64,12 @@ pub fn run(args: &ExpandArgs) {
             has_if = true;
         } else if has_if {
             print!(r"else ");
+        }
+
+        for var in expansion.variables.iter() {
+            let name = escape(Cow::from(&var.name));
+            let value = escape(Cow::from(var.value));
+            print!(r#"local {name}={value};"#);
         }
 
         print!(r"local left_snippet={left_snippet};");
@@ -116,6 +129,14 @@ fn expand<'a>(config: &'a Config, lbuffer: &'a str) -> ExpandResult<'a> {
             left_snippet: m.left_snippet(),
             right_snippet: m.right_snippet(),
             condition: m.condition(),
+            variables: m
+                .captures
+                .iter()
+                .map(|c| ExpansionVariable {
+                    name: c.name.to_string(),
+                    value: c.value,
+                })
+                .collect(),
             evaluate: m.evaluate(),
             has_placeholder: m.has_placeholder(),
         })
@@ -187,6 +208,11 @@ mod tests {
                 abbr-pattern: \.\.$
                 snippet: cd $abbr
                 evaluate: true
+
+              - name: .N
+                abbr-pattern: ^\.(?<n>\d+)$
+                snippet: awk '{print \$$n}'
+                evaluate: true
             ",
         )
         .unwrap()
@@ -223,6 +249,7 @@ mod tests {
                         left_snippet: "git",
                         right_snippet: "",
                         condition: None,
+                        variables: vec![],
                         evaluate: false,
                         has_placeholder: false,
                     }],
@@ -239,6 +266,7 @@ mod tests {
                         left_snippet: "git",
                         right_snippet: "",
                         condition: None,
+                        variables: vec![],
                         evaluate: false,
                         has_placeholder: false,
                     }],
@@ -255,6 +283,7 @@ mod tests {
                         left_snippet: ">/dev/null",
                         right_snippet: "",
                         condition: None,
+                        variables: vec![],
                         evaluate: false,
                         has_placeholder: false,
                     }],
@@ -271,6 +300,7 @@ mod tests {
                         left_snippet: "commit",
                         right_snippet: "",
                         condition: None,
+                        variables: vec![],
                         evaluate: false,
                         has_placeholder: false,
                     }],
@@ -305,6 +335,7 @@ mod tests {
                         left_snippet: "$HOME",
                         right_snippet: "",
                         condition: None,
+                        variables: vec![],
                         evaluate: true,
                         has_placeholder: false,
                     }],
@@ -321,6 +352,7 @@ mod tests {
                         left_snippet: "commit -m '",
                         right_snippet: "'",
                         condition: None,
+                        variables: vec![],
                         evaluate: false,
                         has_placeholder: true,
                     }],
@@ -337,6 +369,7 @@ mod tests {
                         left_snippet: "sudo apt install -y",
                         right_snippet: "",
                         condition: Some("(( ${+commands[apt]} ))"),
+                        variables: vec![],
                         evaluate: false,
                         has_placeholder: false,
                     }],
@@ -353,6 +386,7 @@ mod tests {
                         left_snippet: "cd $abbr",
                         right_snippet: "",
                         condition: None,
+                        variables: vec![],
                         evaluate: true,
                         has_placeholder: false,
                     }],
@@ -369,6 +403,7 @@ mod tests {
                         left_snippet: "cd $abbr",
                         right_snippet: "",
                         condition: None,
+                        variables: vec![],
                         evaluate: true,
                         has_placeholder: false,
                     }],
@@ -386,6 +421,7 @@ mod tests {
                             left_snippet: "trash",
                             right_snippet: "",
                             condition: Some("(( ${+commands[trash]} ))"),
+                            variables: vec![],
                             evaluate: false,
                             has_placeholder: false,
                         },
@@ -394,10 +430,31 @@ mod tests {
                             left_snippet: "rm -r",
                             right_snippet: "",
                             condition: None,
+                            variables: vec![],
                             evaluate: false,
                             has_placeholder: false,
                         },
                     ],
+                },
+            },
+            Scenario {
+                testname: "with captures",
+                lbuffer: ".2",
+                expected: ExpandResult {
+                    command: ".2",
+                    last_arg: ".2",
+                    expansions: vec![Expansion {
+                        replacing_index: 0,
+                        left_snippet: r"awk '{print \$$n}'",
+                        right_snippet: "",
+                        condition: None,
+                        variables: vec![ExpansionVariable {
+                            name: "n".to_string(),
+                            value: "2",
+                        }],
+                        evaluate: true,
+                        has_placeholder: false,
+                    }],
                 },
             },
         ];
