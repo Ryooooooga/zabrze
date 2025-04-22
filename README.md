@@ -159,6 +159,26 @@ $ cargo install zabrze
 $ brew install ryooooooga/tap/zabrze
 ```
 
+## Configuration
+
+zabrze reads configuration files from the following locations:
+
+- `$ZABRZE_CONFIG_HOME` if set, otherwise `$XDG_CONFIG_HOME/zabrze` (defaults to `$HOME/.config/zabrze`)
+- Configuration files are read in lexicographical order.
+- Supported file extensions are `yaml` and `yml`.
+
+The configuration file is a YAML file that defines a list of abbreviations. Each abbreviation has the following properties:
+
+- `name` (string): A descriptive name for the abbreviation.
+- `abbr` (string, required, mutually exclusive with `abbr-pattern`): The abbreviation to expand.
+- `abbr-pattern` (string, required, mutually exclusive with `abbr`): A regular expression to match the abbreviation.
+- `snippet` (string, required): The text to replace the abbreviation with.
+- `global` (boolean): A boolean value indicating whether the abbreviation should be expanded globally. Defaults to `false`.
+- `context` (string): A regular expression that must match the beginning of the line for the abbreviation to be expanded.
+- `evaluate` (boolean): A boolean value indicating whether the snippet should be evaluated as a shell command. Defaults to `false`.
+- `if` (string): A conditional expression that must evaluate to true for the abbreviation to be expanded.
+- `cursor` (string or `null`): A string that specifies the cursor position after expansion. Defaults to `{}`.
+
 ## Alternatives
 
 - [zsh-abbrev-alias](https://github.com/momo-lab/zsh-abbrev-alias)
