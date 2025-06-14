@@ -48,7 +48,7 @@ impl Config {
                 Ok(c) => config.merge(c),
                 Err(err) => {
                     let error_message =
-                        format!("failed to load config `{}': {}", path.display(), err);
+                        format!("failed to load config '{}': {}", path.display(), err);
                     let error_style = Color::Red.normal();
 
                     eprintln!("{}", error_style.paint(error_message));
