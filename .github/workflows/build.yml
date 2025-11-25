@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: true
 
@@ -31,7 +31,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - run: cargo build --verbose --all --all-targets --all-features
       - run: cargo test --verbose --all --all-targets --all-features
@@ -63,7 +63,7 @@ jobs:
     runs-on: ${{ matrix.platform.os }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: true
           fetch-depth: 0
@@ -116,7 +116,7 @@ jobs:
 
     steps:
       - name: Checkout tap
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: "Ryooooooga/homebrew-tap"
           token: ${{ secrets.GH_ACCESS_TOKEN }}
@@ -201,7 +201,7 @@ jobs:
     needs: [release]
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: true
 
