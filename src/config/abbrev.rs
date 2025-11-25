@@ -57,18 +57,13 @@ pub struct Capture<'a> {
     pub value: &'a str,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub enum Action {
     #[serde(rename = "replace-last")]
+    #[default]
     ReplaceLast,
     #[serde(rename = "replace-all")]
     ReplaceAll,
-}
-
-impl Default for Action {
-    fn default() -> Self {
-        Self::ReplaceLast
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
