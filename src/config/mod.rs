@@ -5,9 +5,8 @@ pub use abbrev::{Abbrev, Trigger};
 pub use config_path::get_default_config_dir;
 
 use ansi_term::Color;
-use glob::glob;
 use serde::{Deserialize, Serialize};
-use std::fs::File;
+use std::fs::{File, read_dir};
 use std::io;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
@@ -41,9 +40,11 @@ impl Config {
 
     pub fn load_or_exit() -> Self {
         let config_dir = get_default_config_dir().expect("could not determine config directory");
+        let config_paths = Self::config_file_paths(Path::new(&config_dir))
+            .expect("failed to read config directory");
         let mut config: Config = Default::default();
 
-        for path in &Self::config_file_paths(&config_dir) {
+        for path in &config_paths {
             match Self::load_from_file(path) {
                 Ok(c) => config.merge(c),
                 Err(err) => {
@@ -63,25 +64,22 @@ impl Config {
         self.abbrevs.append(&mut other.abbrevs);
     }
 
-    fn config_file_paths(config_dir: &str) -> Vec<PathBuf> {
+    fn config_file_paths(config_dir: &Path) -> io::Result<Vec<PathBuf>> {
         let mut paths = Vec::new();
 
-        for ext in &["yaml", "yml"] {
-            let pattern = format!("{config_dir}/**/*{ext}");
-
-            for path in glob(&pattern).expect("failed to read glob pattern") {
-                match path {
-                    Ok(path) => paths.push(path),
-                    Err(err) => {
-                        let error_message = format!("failed to load config: {err}");
-                        let error_style = Color::Red.normal();
-                        eprintln!("{}", error_style.paint(error_message));
-                    }
+        for entry in read_dir(config_dir)? {
+            let entry = entry?;
+            if entry.file_type()?.is_file() {
+                let path = entry.path();
+                if let Some(ext) = path.extension()
+                    && (ext == "yaml" || ext == "yml")
+                {
+                    paths.push(path);
                 }
             }
         }
 
         paths.sort();
-        paths
+        Ok(paths)
     }
 }
