@@ -12,7 +12,7 @@ pub enum ExpandError {
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Trigger {
     #[serde(rename = "abbr")]
-    Abbr(String),
+    Text(String),
     #[serde(rename = "abbr-pattern")]
     Regex(String),
 }
@@ -23,8 +23,8 @@ impl Trigger {
         last_arg: &'a str,
     ) -> Result<Option<Vec<Capture<'a>>>, ExpandError> {
         match self {
-            Trigger::Abbr(abbr) if abbr == last_arg => Ok(Some(vec![])),
-            Trigger::Abbr(_) => Ok(None),
+            Trigger::Text(trigger) if trigger == last_arg => Ok(Some(vec![])),
+            Trigger::Text(_) => Ok(None),
             Trigger::Regex(regex) => {
                 let pattern = Regex::new(regex)?;
 
@@ -67,12 +67,13 @@ pub enum Action {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Abbrev {
+pub struct Snippet {
     pub name: Option<String>,
 
     #[serde(flatten)]
     pub trigger: Trigger,
 
+    #[serde(rename = "snippet")]
     pub snippet: String,
 
     #[serde(default = "default_cursor")]
@@ -93,13 +94,13 @@ pub struct Abbrev {
     pub evaluate: bool,
 }
 
-impl Abbrev {
+impl Snippet {
     pub fn do_match<'a>(&'a self, command: &str, last_arg: &'a str) -> Option<Match<'a>> {
         match self.do_match_impl(command, last_arg) {
             Ok(m) => m,
             Err(error) => {
                 let name = self.name.as_ref().unwrap_or(&self.snippet);
-                let error_message = format!("abbrev '{}': {}", name, error);
+                let error_message = format!("snippet '{}': {}", name, error);
                 let error_style = Color::Red.normal();
 
                 eprintln!("{}", error_style.paint(error_message));
@@ -129,12 +130,13 @@ impl Abbrev {
         let matched_snippet = self
             .cursor
             .as_ref()
+            .filter(|cursor| !cursor.is_empty())
             .and_then(|cursor| self.snippet.split_once(cursor))
             .map(|(left, right)| MatchedSnippet::WithPlaceholder { left, right })
             .unwrap_or_else(|| MatchedSnippet::Simple(&self.snippet));
 
         Ok(Some(Match {
-            abbrev: self,
+            snippet: self,
             matched_snippet,
             captures,
         }))
@@ -153,7 +155,7 @@ impl Abbrev {
 
 #[derive(Debug)]
 pub struct Match<'a> {
-    abbrev: &'a Abbrev,
+    snippet: &'a Snippet,
     matched_snippet: MatchedSnippet<'a>,
     pub captures: Vec<Capture<'a>>,
 }
@@ -181,15 +183,15 @@ impl<'a> Match<'a> {
     }
 
     pub fn action(&self) -> &'a Action {
-        &self.abbrev.action
+        &self.snippet.action
     }
 
     pub fn condition(&self) -> Option<&'a str> {
-        self.abbrev.condition.as_deref()
+        self.snippet.condition.as_deref()
     }
 
     pub fn evaluate(&self) -> bool {
-        self.abbrev.evaluate
+        self.snippet.evaluate
     }
 }
 
@@ -219,7 +221,7 @@ mod tests {
 
         struct Scenario {
             testname: &'static str,
-            abbr: Abbrev,
+            snippet: Snippet,
             command: &'static str,
             last_arg: &'static str,
             expected: Option<TestMatch>,
@@ -228,9 +230,9 @@ mod tests {
         let scenarios = &[
             Scenario {
                 testname: "should match non-global if first arg",
-                abbr: Abbrev {
+                snippet: Snippet {
                     name: None,
-                    trigger: Trigger::Abbr("test".to_string()),
+                    trigger: Trigger::Text("test".to_string()),
                     snippet: "TEST".to_string(),
                     cursor: Some("{}".to_string()),
                     action: Action::ReplaceLast,
@@ -250,9 +252,9 @@ mod tests {
             },
             Scenario {
                 testname: "should not match non-global if second arg",
-                abbr: Abbrev {
+                snippet: Snippet {
                     name: None,
-                    trigger: Trigger::Abbr("test".to_string()),
+                    trigger: Trigger::Text("test".to_string()),
                     snippet: "TEST".to_string(),
                     cursor: Some("{}".to_string()),
                     action: Action::ReplaceLast,
@@ -267,9 +269,9 @@ mod tests {
             },
             Scenario {
                 testname: "should match global",
-                abbr: Abbrev {
+                snippet: Snippet {
                     name: None,
-                    trigger: Trigger::Abbr("test".to_string()),
+                    trigger: Trigger::Text("test".to_string()),
                     snippet: "TEST".to_string(),
                     cursor: Some("{}".to_string()),
                     action: Action::ReplaceLast,
@@ -289,9 +291,9 @@ mod tests {
             },
             Scenario {
                 testname: "should match global with context",
-                abbr: Abbrev {
+                snippet: Snippet {
                     name: None,
-                    trigger: Trigger::Abbr("test".to_string()),
+                    trigger: Trigger::Text("test".to_string()),
                     snippet: "TEST".to_string(),
                     cursor: Some("{}".to_string()),
                     action: Action::ReplaceLast,
@@ -311,9 +313,9 @@ mod tests {
             },
             Scenario {
                 testname: "should not match global with context",
-                abbr: Abbrev {
+                snippet: Snippet {
                     name: None,
-                    trigger: Trigger::Abbr("test".to_string()),
+                    trigger: Trigger::Text("test".to_string()),
                     snippet: "TEST".to_string(),
                     cursor: Some("{}".to_string()),
                     action: Action::ReplaceLast,
@@ -328,9 +330,9 @@ mod tests {
             },
             Scenario {
                 testname: "should not match if context is invalid",
-                abbr: Abbrev {
+                snippet: Snippet {
                     name: None,
-                    trigger: Trigger::Abbr("test".to_string()),
+                    trigger: Trigger::Text("test".to_string()),
                     snippet: "TEST".to_string(),
                     cursor: Some("{}".to_string()),
                     action: Action::ReplaceLast,
@@ -345,9 +347,9 @@ mod tests {
             },
             Scenario {
                 testname: "should match with placeholder",
-                abbr: Abbrev {
+                snippet: Snippet {
                     name: None,
-                    trigger: Trigger::Abbr("test".to_string()),
+                    trigger: Trigger::Text("test".to_string()),
                     snippet: "TE{}ST".to_string(),
                     cursor: Some("{}".to_string()),
                     action: Action::ReplaceLast,
@@ -367,9 +369,9 @@ mod tests {
             },
             Scenario {
                 testname: "should not match if cursor is none",
-                abbr: Abbrev {
+                snippet: Snippet {
                     name: None,
-                    trigger: Trigger::Abbr("test".to_string()),
+                    trigger: Trigger::Text("test".to_string()),
                     snippet: "TE{}ST".to_string(),
                     cursor: None,
                     action: Action::ReplaceLast,
@@ -389,9 +391,9 @@ mod tests {
             },
             Scenario {
                 testname: "should match with custom placeholder",
-                abbr: Abbrev {
+                snippet: Snippet {
                     name: None,
-                    trigger: Trigger::Abbr("test".to_string()),
+                    trigger: Trigger::Text("test".to_string()),
                     snippet: "TE👇ST".to_string(),
                     cursor: Some("👇".to_string()),
                     action: Action::ReplaceLast,
@@ -411,7 +413,7 @@ mod tests {
             },
             Scenario {
                 testname: "should match abbrev-pattern",
-                abbr: Abbrev {
+                snippet: Snippet {
                     name: None,
                     trigger: Trigger::Regex(r"\.py$".to_string()),
                     snippet: "python3".to_string(),
@@ -433,7 +435,7 @@ mod tests {
             },
             Scenario {
                 testname: "should capture named groups (?P<...>)",
-                abbr: Abbrev {
+                snippet: Snippet {
                     name: None,
                     trigger: Trigger::Regex(r"^\.(?P<digits>\d+)$".to_string()),
                     snippet: r".\$$n".to_string(),
@@ -458,7 +460,7 @@ mod tests {
             },
             Scenario {
                 testname: "should capture named groups (?<...>)",
-                abbr: Abbrev {
+                snippet: Snippet {
                     name: None,
                     trigger: Trigger::Regex(r"^\.(?<digits>\d+)$".to_string()),
                     snippet: r".\$$n".to_string(),
@@ -484,7 +486,7 @@ mod tests {
         ];
 
         for s in scenarios {
-            let actual = s.abbr.do_match(s.command, s.last_arg);
+            let actual = s.snippet.do_match(s.command, s.last_arg);
 
             match (actual, &s.expected) {
                 (Some(actual), Some(expected)) => {

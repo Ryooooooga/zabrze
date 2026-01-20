@@ -9,14 +9,14 @@ pub fn run(args: &ListArgs) {
 }
 
 fn list<W: io::Write>(_args: &ListArgs, config: &Config, out: &mut W) -> Result<(), io::Error> {
-    for abbrev in &config.abbrevs {
-        let abbr = match &abbrev.trigger {
-            Trigger::Abbr(abbr) => abbr,
+    for snippet in &config.snippets {
+        let trigger = match &snippet.trigger {
+            Trigger::Text(text) => text,
             Trigger::Regex(regex) => regex,
         };
-        let snippet = escape(Cow::from(&abbrev.snippet));
+        let snippet = escape(Cow::from(&snippet.snippet));
 
-        writeln!(out, "{}={}", abbr, snippet)?;
+        writeln!(out, "{}={}", trigger, snippet)?;
     }
 
     Ok(())
