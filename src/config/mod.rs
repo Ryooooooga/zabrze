@@ -1,8 +1,8 @@
-pub mod abbrev;
 pub mod config_path;
+pub mod snippet;
 
-pub use abbrev::{Abbrev, Trigger};
 pub use config_path::get_default_config_dir;
+pub use snippet::{Snippet, Trigger};
 
 use ansi_term::Color;
 use serde::{Deserialize, Serialize};
@@ -25,7 +25,8 @@ pub enum ConfigError {
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Config {
-    pub abbrevs: Vec<Abbrev>,
+    #[serde(rename = "abbrevs")]
+    pub snippets: Vec<Snippet>,
 }
 
 impl Config {
@@ -71,7 +72,7 @@ impl Config {
     }
 
     fn merge(&mut self, mut other: Self) {
-        self.abbrevs.append(&mut other.abbrevs);
+        self.snippets.append(&mut other.snippets);
     }
 
     fn config_file_paths(config_dir: &Path) -> io::Result<Vec<PathBuf>> {

@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::config::abbrev::{Abbrev, Action, Match};
+use crate::config::snippet::{Action, Match, Snippet};
 use crate::opt::ExpandArgs;
 use shell_escape::escape;
 use std::borrow::Cow;
@@ -40,10 +40,10 @@ pub fn run(args: &ExpandArgs) {
     }
 
     let command = escape(Cow::from(result.command));
-    let abbr = escape(Cow::from(result.last_arg));
+    let trigger = escape(Cow::from(result.last_arg));
 
     print!(r#"local command={command};"#);
-    print!(r#"local abbr={abbr};"#);
+    print!(r#"local abbr={trigger};"#);
 
     let mut has_if = false;
     for expansion in &result.expansions {
@@ -117,7 +117,7 @@ fn expand<'a>(config: &'a Config, lbuffer: &'a str) -> ExpandResult<'a> {
     let last_arg_start_index = lbuffer.len() - last_arg.len();
     let command_start_index = lbuffer.len() - command.len();
 
-    let matches = find_matches(&config.abbrevs, command, last_arg);
+    let matches = find_matches(&config.snippets, command, last_arg);
 
     let expansions = matches
         .iter()
@@ -491,10 +491,14 @@ fn test_find_last_command_index() {
     assert_eq!(find_last_command_index("seq 10 | tail -3 | cat"), 18);
 }
 
-fn find_matches<'a>(abbrevs: &'a [Abbrev], command: &'a str, last_arg: &'a str) -> Vec<Match<'a>> {
+fn find_matches<'a>(
+    snippets: &'a [Snippet],
+    command: &'a str,
+    last_arg: &'a str,
+) -> Vec<Match<'a>> {
     let mut matches = Vec::new();
-    for abbr in abbrevs {
-        if let Some(m) = abbr.do_match(command, last_arg) {
+    for snippet in snippets {
+        if let Some(m) = snippet.do_match(command, last_arg) {
             let has_condition = m.condition().is_some();
             matches.push(m);
 
