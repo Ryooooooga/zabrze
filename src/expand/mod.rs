@@ -1,5 +1,5 @@
-use crate::config::abbrev::{Abbrev, Action, Match};
 use crate::config::Config;
+use crate::config::abbrev::{Abbrev, Action, Match};
 use crate::opt::ExpandArgs;
 use shell_escape::escape;
 use std::borrow::Cow;
