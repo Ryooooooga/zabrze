@@ -9,16 +9,17 @@ ZSH abbreviation expansion plugin
 
 ### Simple abbreviation
 
-```yaml
-# ~/.config/zabrze/config.yaml
-snippets:
-  - name: git
-    trigger: g
-    snippet: git
+```toml
+# ~/.config/zabrze/config.toml
+[[snippets]]
+name = "git"
+trigger = "g"
+snippet = "git"
 
-  - name: awk '{print $1}'
-    trigger: '.1'
-    snippet: awk '{print $1}'
+[[snippets]]
+name = "awk '{print $1}'"
+trigger = ".1"
+snippet = "awk '{print $1}'"
 ```
 
 ```zsh
@@ -39,12 +40,12 @@ $ cat a.txt | awk '{print $1}'
 
 ### Global abbreviation
 
-```yaml
-snippets:
-  - name: '>/dev/null 2>&1'
-    trigger: 'null'
-    snippets: '>/dev/null 2>&1'
-    global: true
+```toml
+[[snippets]]
+name = ">/dev/null 2>&1"
+trigger = "null"
+snippet = ">/dev/null 2>&1"
+global = true
 ```
 
 ```zsh
@@ -55,27 +56,29 @@ $ echo a >/dev/null 2>&1
 
 ### Global abbreviation with context
 
-```yaml
-snippets:
-  - name: git commit
-    trigger: c
-    snippet: commit
-    global: true
-    context: '^git\s'
-    
-  - name: git commit -m
-    trigger: cm
-    snippet: commit -m '{}'
-    cursor: "{}" # optional; defaults to "{}"
-    global: true
-    context: '^git\s'
+```toml
+[[snippets]]
+name = "git commit"
+trigger = "c"
+snippet = "commit"
+global = true
+context = '^git\s'
 
-  - name: branch name
-    trigger: B
-    snippet: $(git symbolic-ref --short HEAD)
-    evaluate: true
-    global: true
-    context: '^git\s'
+[[snippets]]
+name = "git commit -m"
+trigger = "cm"
+snippet = "commit -m '{}'"
+cursor = "{}"  # optional; defaults to "{}"
+global = true
+context = '^git\s'
+
+[[snippets]]
+name = "branch name"
+trigger = "B"
+snippet = "$(git symbolic-ref --short HEAD)"
+evaluate = true
+global = true
+context = '^git\s'
 ```
 
 ```zsh
@@ -94,37 +97,40 @@ $ git push -d origin main
 
 ### Conditional abbreviation
 
-```yaml
-snippets:
-  - name: chrome
-    trigger: chrome
-    snippet: open -a 'Google Chrome'
-    if: '[[ "$OSTYPE" =~ darwin ]]' # only available in macOS
+```toml
+[[snippets]]
+name = "chrome"
+trigger = "chrome"
+snippet = "open -a 'Google Chrome'"
+if = '[[ "$OSTYPE" =~ darwin ]]'  # only available in macOS
 
-  - name: trash
-    trigger: rm
-    snippet: trash
-    if: (( ${+commands[trash]} )) # available if trash is installed
+[[snippets]]
+name = "trash"
+trigger = "rm"
+snippet = "trash"
+if = "(( ${+commands[trash]} ))"  # available if trash is installed
 
-  - name: rm -r
-    trigger: rm
-    snippet: rm -r # fallback
+[[snippets]]
+name = "rm -r"
+trigger = "rm"
+snippet = "rm -r"  # fallback
 ```
 
 ### Suffix alias
 
-```yaml
-snippets:
-  - name: python3 *.py
-    trigger-pattern: ^(?<file>.+\.py)$
-    snippet: python3 $file
-    evaluate: true
+```toml
+[[snippets]]
+name = "python3 *.py"
+trigger-pattern = '^(?<file>.+\.py)$'
+snippet = "python3 $file"
+evaluate = true
 
-  # or
-  - name: python3 *.py
-    trigger-pattern: \.py$
-    snippet: python3 $trigger
-    evaluate: true
+# or
+[[snippets]]
+name = "python3 *.py"
+trigger-pattern = '\.py$'
+snippet = "python3 $trigger"
+evaluate = true
 ```
 
 ```zsh
@@ -161,13 +167,15 @@ $ brew install ryooooooga/tap/zabrze
 
 ## Configuration
 
+> ⚠️ **Note:** YAML configuration format is deprecated. Please use TOML instead.
+
 zabrze reads configuration files from the following locations:
 
 - `$ZABRZE_CONFIG_HOME` if set, otherwise `$XDG_CONFIG_HOME/zabrze` (defaults to `$HOME/.config/zabrze`)
 - Configuration files are read in lexicographical order.
-- Supported file extensions are `yaml` and `yml`.
+- Supported file extensions are `toml` (recommended), `yaml` (deprecated), and `yml` (deprecated).
 
-The configuration file is a YAML file that defines a list of abbreviations. Each abbreviation has the following properties:
+The configuration file (TOML) defines a list of abbreviations. Each abbreviation has the following properties:
 
 - `name` (string): A descriptive name for the abbreviation.
 - `trigger` (string, required, mutually exclusive with `trigger-pattern`): The abbreviation to expand.
