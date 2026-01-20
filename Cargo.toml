@@ -1,13 +1,13 @@
 [package]
 name = "zabrze"
 version = "0.5.1"
-authors = ['Ryooooooga <eial5q265e5@gmail.com>']
-description = 'ZSH abbreviation exapansion plugin'
-license = 'MIT'
-readme = 'README.md'
-repository = 'https://github.com/Ryooooooga/zabrze'
-keywords = ['zsh', 'zsh-plugin']
-edition = '2021'
+authors = ["Ryooooooga <eial5q265e5@gmail.com>"]
+description = "ZSH abbreviation exapansion plugin"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/Ryooooooga/zabrze"
+keywords = ["zsh", "zsh-plugin"]
+edition = "2024"
 
 [dependencies]
 ansi_term = "0.12"
