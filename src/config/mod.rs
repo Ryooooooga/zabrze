@@ -27,7 +27,7 @@ pub struct Config {
 }
 
 impl Config {
-    #[allow(dead_code)]
+    #[cfg(test)]
     pub fn load_from_str(s: &str) -> Result<Self, ConfigError> {
         let config = serde_yaml::from_str(s)?;
         Ok(config)
