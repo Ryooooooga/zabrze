@@ -29,33 +29,33 @@ mod tests {
     fn test_config() -> Config {
         Config::load_from_str(
             r#"
-            [[abbrevs]]
-            abbr = "g"
+            [[snippets]]
+            trigger = "g"
             snippet = "git"
 
-            [[abbrevs]]
+            [[snippets]]
             name = "git commit"
-            abbr = "c"
+            trigger = "c"
             snippet = "commit"
             global = true
             context = "^git "
 
-            [[abbrevs]]
+            [[snippets]]
             name = ">/dev/null"
-            abbr = "null"
+            trigger = "null"
             snippet = ">/dev/null"
             global = true
 
-            [[abbrevs]]
+            [[snippets]]
             name = "$HOME"
-            abbr = "home"
+            trigger = "home"
             snippet = "$HOME"
             evaluate = true
 
-            [[abbrevs]]
+            [[snippets]]
             name = ".."
-            abbr-pattern = '^\.\.(/\.\.)*$'
-            snippet = "cd $abbr"
+            trigger-pattern = '^\.\.(/\.\.)*$'
+            snippet = "cd $trigger"
             evaluate = true
             "#,
         )
@@ -76,7 +76,7 @@ mod tests {
 c=commit
 null='>/dev/null'
 home='$HOME'
-^\.\.(/\.\.)*$='cd $abbr'
+^\.\.(/\.\.)*$='cd $trigger'
 ";
 
         assert_eq!(output, expected);

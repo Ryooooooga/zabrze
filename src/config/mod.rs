@@ -25,7 +25,7 @@ pub enum ConfigError {
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Config {
-    #[serde(rename = "abbrevs")]
+    #[serde(rename = "snippets", alias = "abbrevs")]
     pub snippets: Vec<Snippet>,
 }
 

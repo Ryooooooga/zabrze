@@ -11,13 +11,13 @@ ZSH abbreviation expansion plugin
 
 ```yaml
 # ~/.config/zabrze/config.yaml
-abbrevs:
+snippets:
   - name: git
-    abbr: g
+    trigger: g
     snippet: git
 
   - name: awk '{print $1}'
-    abbr: '.1'
+    trigger: '.1'
     snippet: awk '{print $1}'
 ```
 
@@ -40,9 +40,9 @@ $ cat a.txt | awk '{print $1}'
 ### Global abbreviation
 
 ```yaml
-abbrevs:
+snippets:
   - name: '>/dev/null 2>&1'
-    abbr: 'null'
+    trigger: 'null'
     snippets: '>/dev/null 2>&1'
     global: true
 ```
@@ -56,22 +56,22 @@ $ echo a >/dev/null 2>&1
 ### Global abbreviation with context
 
 ```yaml
-abbrevs:
+snippets:
   - name: git commit
-    abbr: c
+    trigger: c
     snippet: commit
     global: true
     context: '^git\s'
     
   - name: git commit -m
-    abbr: cm
+    trigger: cm
     snippet: commit -m '{}'
     cursor: "{}" # optional; defaults to "{}"
     global: true
     context: '^git\s'
 
   - name: branch name
-    abbr: B
+    trigger: B
     snippet: $(git symbolic-ref --short HEAD)
     evaluate: true
     global: true
@@ -95,35 +95,35 @@ $ git push -d origin main
 ### Conditional abbreviation
 
 ```yaml
-abbrevs:
+snippets:
   - name: chrome
-    abbr: chrome
+    trigger: chrome
     snippet: open -a 'Google Chrome'
     if: '[[ "$OSTYPE" =~ darwin ]]' # only available in macOS
 
   - name: trash
-    abbr: rm
+    trigger: rm
     snippet: trash
     if: (( ${+commands[trash]} )) # available if trash is installed
 
   - name: rm -r
-    abbr: rm
+    trigger: rm
     snippet: rm -r # fallback
 ```
 
 ### Suffix alias
 
 ```yaml
-abbrevs:
+snippets:
   - name: python3 *.py
-    abbr-pattern: ^(?<file>.+\.py)$
+    trigger-pattern: ^(?<file>.+\.py)$
     snippet: python3 $file
     evaluate: true
 
   # or
   - name: python3 *.py
-    abbr-pattern: \.py$
-    snippet: python3 $abbr
+    trigger-pattern: \.py$
+    snippet: python3 $trigger
     evaluate: true
 ```
 
@@ -170,8 +170,8 @@ zabrze reads configuration files from the following locations:
 The configuration file is a YAML file that defines a list of abbreviations. Each abbreviation has the following properties:
 
 - `name` (string): A descriptive name for the abbreviation.
-- `abbr` (string, required, mutually exclusive with `abbr-pattern`): The abbreviation to expand.
-- `abbr-pattern` (string, required, mutually exclusive with `abbr`): A regular expression to match the abbreviation.
+- `trigger` (string, required, mutually exclusive with `trigger-pattern`): The abbreviation to expand.
+- `trigger-pattern` (string, required, mutually exclusive with `trigger`): A regular expression to match the abbreviation.
 - `snippet` (string, required): The text to replace the abbreviation with.
 - `global` (boolean): A boolean value indicating whether the abbreviation should be expanded globally. Defaults to `false`.
 - `context` (string): A regular expression that must match the beginning of the line for the abbreviation to be expanded.
