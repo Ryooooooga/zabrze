@@ -11,9 +11,9 @@ pub enum ExpandError {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Trigger {
-    #[serde(rename = "abbr")]
+    #[serde(rename = "trigger", alias = "abbr")]
     Text(String),
-    #[serde(rename = "abbr-pattern")]
+    #[serde(rename = "trigger-pattern", alias = "abbr-pattern")]
     Regex(String),
 }
 
@@ -412,7 +412,7 @@ mod tests {
                 }),
             },
             Scenario {
-                testname: "should match abbrev-pattern",
+                testname: "should match trigger-pattern",
                 snippet: Snippet {
                     name: None,
                     trigger: Trigger::Regex(r"\.py$".to_string()),

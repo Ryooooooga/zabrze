@@ -43,7 +43,7 @@ pub fn run(args: &ExpandArgs) {
     let trigger = escape(Cow::from(result.last_arg));
 
     print!(r#"local command={command};"#);
-    print!(r#"local abbr={trigger};"#);
+    print!(r#"local abbr={trigger} trigger={trigger};"#);
 
     let mut has_if = false;
     for expansion in &result.expansions {
@@ -156,71 +156,71 @@ mod tests {
     fn test_config() -> Config {
         Config::load_from_str(
             r#"
-            [[abbrevs]]
+            [[snippets]]
             name = "git"
-            abbr = "g"
+            trigger = "g"
             snippet = "git"
 
-            [[abbrevs]]
+            [[snippets]]
             name = "git commit"
-            abbr = "c"
+            trigger = "c"
             snippet = "commit"
             global = true
             context = '^git '
 
-            [[abbrevs]]
+            [[snippets]]
             name = ">/dev/null"
-            abbr = "null"
+            trigger = "null"
             snippet = ">/dev/null"
             global = true
 
-            [[abbrevs]]
+            [[snippets]]
             name = "$HOME"
-            abbr = "home"
+            trigger = "home"
             snippet = "$HOME"
             evaluate = true
 
-            [[abbrevs]]
+            [[snippets]]
             name = "git commit -m ''"
-            abbr = "cm"
+            trigger = "cm"
             snippet = "commit -m '{}'"
             global = true
             context = '^git '
 
-            [[abbrevs]]
+            [[snippets]]
             name = "sudo apt install -y"
-            abbr = "install"
+            trigger = "install"
             snippet = "sudo apt install -y"
             action = "replace-all"
             global = true
             context = "^apt "
             if = "(( ${+commands[apt]} ))"
 
-            [[abbrevs]]
+            [[snippets]]
             name = "trash"
-            abbr = "rm"
+            trigger = "rm"
             snippet = "trash"
             if = "(( ${+commands[trash]} ))"
 
-            [[abbrevs]]
+            [[snippets]]
             name = "rm -r"
-            abbr = "rm"
+            trigger = "rm"
             snippet = "rm -r"
 
-            [[abbrevs]]
+            [[snippets]]
             name = "never matched"
-            abbr = "rm"
+            trigger = "rm"
             snippet = "never"
 
-            [[abbrevs]]
+            [[snippets]]
             name = "cd .."
-            abbr-pattern = '\.\.$'
-            snippet = "cd $abbr"
+            trigger-pattern = '\.\.$'
+            snippet = "cd $trigger"
             evaluate = true
 
-            [[abbrevs]]
+            [[snippets]]
             name = ".N"
-            abbr-pattern = '^\.(?<n>\d+)$'
+            trigger-pattern = '^\.(?<n>\d+)$'
             snippet = "awk '{print \\$$n}'"
             evaluate = true
             "#,
@@ -249,7 +249,7 @@ mod tests {
                 },
             },
             Scenario {
-                testname: "simple abbr",
+                testname: "simple snippet",
                 lbuffer: "g",
                 expected: ExpandResult {
                     command: "g",
@@ -266,7 +266,7 @@ mod tests {
                 },
             },
             Scenario {
-                testname: "simple abbr with leading command",
+                testname: "simple snippet with leading command",
                 lbuffer: "echo hello; g",
                 expected: ExpandResult {
                     command: "g",
@@ -283,7 +283,7 @@ mod tests {
                 },
             },
             Scenario {
-                testname: "global abbr",
+                testname: "global snippet",
                 lbuffer: "echo hello null",
                 expected: ExpandResult {
                     command: "echo hello null",
@@ -300,7 +300,7 @@ mod tests {
                 },
             },
             Scenario {
-                testname: "global abbr with context",
+                testname: "global snippet with context",
                 lbuffer: "echo hello; git c",
                 expected: ExpandResult {
                     command: "git c",
@@ -317,7 +317,7 @@ mod tests {
                 },
             },
             Scenario {
-                testname: "global abbr with miss matched context",
+                testname: "global snippet with miss matched context",
                 lbuffer: "echo git c",
                 expected: ExpandResult {
                     command: "echo git c",
@@ -326,7 +326,7 @@ mod tests {
                 },
             },
             Scenario {
-                testname: "no matched abbr",
+                testname: "no matched snippet",
                 lbuffer: "echo",
                 expected: ExpandResult {
                     command: "echo",
@@ -335,7 +335,7 @@ mod tests {
                 },
             },
             Scenario {
-                testname: "simple abbr with evaluate=true",
+                testname: "simple snippet with evaluate=true",
                 lbuffer: "home",
                 expected: ExpandResult {
                     command: "home",
@@ -352,7 +352,7 @@ mod tests {
                 },
             },
             Scenario {
-                testname: "simple abbr with placeholder",
+                testname: "simple snippet with placeholder",
                 lbuffer: "git cm",
                 expected: ExpandResult {
                     command: "git cm",
@@ -393,7 +393,7 @@ mod tests {
                     last_arg: "..",
                     expansions: vec![Expansion {
                         replacing_index: 0,
-                        left_snippet: "cd $abbr",
+                        left_snippet: "cd $trigger",
                         right_snippet: "",
                         condition: None,
                         variables: vec![],
@@ -410,7 +410,7 @@ mod tests {
                     last_arg: "../..",
                     expansions: vec![Expansion {
                         replacing_index: 5,
-                        left_snippet: "cd $abbr",
+                        left_snippet: "cd $trigger",
                         right_snippet: "",
                         condition: None,
                         variables: vec![],

@@ -1,96 +1,96 @@
-abbrevs:
+snippets:
   # simple
   - name: git
-    abbr: g
+    trigger: g
     snippet: git
 
   # global
   - name: ">null"
-    abbr: ">null"
+    trigger: ">null"
     snippet: ">/dev/null 2>&1"
     global: true
 
   # evaluate
   - name: view
-    abbr: view
+    trigger: view
     snippet: ${EDITOR} -R
     evaluate: true
 
   # global+evaluate
   - name: "42"
-    abbr: ANSWER
+    trigger: ANSWER
     snippet: answer is $(echo $((6*7)))
     evaluate: true
     global: true
 
   # global+context
-  - abbr: aa
+  - trigger: aa
     snippet: add -vA
     global: true
     context: ^git\s
 
-  - abbr: -f
+  - trigger: -f
     snippet: --force-with-lease
     global: true
     context: ^git(\s+\S+)*\s+push\s
 
   # global+placeholder
-  - abbr: cm
+  - trigger: cm
     snippet: commit -m '{}'
     global: true
     context: ^git\s
 
   # replace-all
-  - abbr: install
+  - trigger: install
     snippet: sudo apt install -y
     action: replace-all
     global: true
     context: ^apt\s
 
-  - abbr: "["
+  - trigger: "["
     snippet: "[ {} ]"
     action: replace-all
 
-  - abbr: "[["
+  - trigger: "[["
     snippet: "[[ 👇 ]]"
     cursor: "👇"
     action: replace-all
 
-  - abbr: "xargsi"
+  - trigger: "xargsi"
     snippet: "xargs -I{} "
     cursor: null
 
-  # $abbr
-  - abbr-pattern: ^\.\.(/\.\.)*/?$
-    snippet: cd $abbr
+  # $trigger
+  - trigger-pattern: ^\.\.(/\.\.)*/?$
+    snippet: cd $trigger
     evaluate: true
 
-  - abbr: placeholder
+  - trigger: placeholder
     snippet: ab{}cd placeholder
 
   # suffix aliases
-  - abbr-pattern: \.ts$
-    snippet: deno run $abbr
+  - trigger-pattern: \.ts$
+    snippet: deno run $trigger
     evaluate: true
 
   # conditional
-  - abbr: cond
-    snippet: conditional abbrev
+  - trigger: cond
+    snippet: conditional snippet
     if: "[[ $ZABRZE_TEST = 1 ]]"
 
-  - abbr: cond2
-    snippet: conditional abbrev
+  - trigger: cond2
+    snippet: conditional snippet
     if: "[[ $ZABRZE_TEST = 0 ]]"
 
-  - abbr: cond3
-    snippet: conditional abbrev
+  - trigger: cond3
+    snippet: conditional snippet
     if: "[[ $ZABRZE_TEST = 0 ]]"
 
-  - abbr: cond3
+  - trigger: cond3
     snippet: conditional fallback
 
   # capture
   - name: ".N"
-    abbr-pattern: ^\.(?<n>\d+)$
+    trigger-pattern: ^\.(?<n>\d+)$
     snippet: awk '{ print \$$n }'
     evaluate: true
