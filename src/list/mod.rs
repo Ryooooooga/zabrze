@@ -28,33 +28,36 @@ mod tests {
 
     fn test_config() -> Config {
         Config::load_from_str(
-            r"
-            abbrevs:
-              - name: git
-                abbr: g
-                snippet: git
+            r#"
+            [[abbrevs]]
+            abbr = "g"
+            snippet = "git"
 
-              - name: git commit
-                abbr: c
-                snippet: commit
-                global: true
-                context: '^git '
+            [[abbrevs]]
+            name = "git commit"
+            abbr = "c"
+            snippet = "commit"
+            global = true
+            context = "^git "
 
-              - name: '>/dev/null'
-                abbr: 'null'
-                snippet: '>/dev/null'
-                global: true
+            [[abbrevs]]
+            name = ">/dev/null"
+            abbr = "null"
+            snippet = ">/dev/null"
+            global = true
 
-              - name: $HOME
-                abbr: home
-                snippet: $HOME
-                evaluate: true
+            [[abbrevs]]
+            name = "$HOME"
+            abbr = "home"
+            snippet = "$HOME"
+            evaluate = true
 
-              - name: ..
-                abbr-pattern: ^\.\.(/\.\.)*$
-                snippet: cd $abbr
-                evaluate: true
-            ",
+            [[abbrevs]]
+            name = ".."
+            abbr-pattern = '^\.\.(/\.\.)*$'
+            snippet = "cd $abbr"
+            evaluate = true
+            "#,
         )
         .unwrap()
     }

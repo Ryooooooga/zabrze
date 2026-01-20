@@ -155,65 +155,75 @@ mod tests {
 
     fn test_config() -> Config {
         Config::load_from_str(
-            r"
-            abbrevs:
-              - name: git
-                abbr: g
-                snippet: git
+            r#"
+            [[abbrevs]]
+            name = "git"
+            abbr = "g"
+            snippet = "git"
 
-              - name: git commit
-                abbr: c
-                snippet: commit
-                global: true
-                context: '^git '
+            [[abbrevs]]
+            name = "git commit"
+            abbr = "c"
+            snippet = "commit"
+            global = true
+            context = '^git '
 
-              - name: '>/dev/null'
-                abbr: 'null'
-                snippet: '>/dev/null'
-                global: true
+            [[abbrevs]]
+            name = ">/dev/null"
+            abbr = "null"
+            snippet = ">/dev/null"
+            global = true
 
-              - name: $HOME
-                abbr: home
-                snippet: $HOME
-                evaluate: true
+            [[abbrevs]]
+            name = "$HOME"
+            abbr = "home"
+            snippet = "$HOME"
+            evaluate = true
 
-              - name: git commit -m ''
-                abbr: cm
-                snippet: commit -m '{}'
-                global: true
-                context: '^git '
+            [[abbrevs]]
+            name = "git commit -m ''"
+            abbr = "cm"
+            snippet = "commit -m '{}'"
+            global = true
+            context = '^git '
 
-              - name: sudo apt install -y
-                abbr: install
-                snippet: sudo apt install -y
-                action: replace-all
-                global: true
-                context: '^apt '
-                if: (( ${+commands[apt]} ))
+            [[abbrevs]]
+            name = "sudo apt install -y"
+            abbr = "install"
+            snippet = "sudo apt install -y"
+            action = "replace-all"
+            global = true
+            context = "^apt "
+            if = "(( ${+commands[apt]} ))"
 
-              - name: trash
-                abbr: rm
-                snippet: trash
-                if: (( ${+commands[trash]} ))
+            [[abbrevs]]
+            name = "trash"
+            abbr = "rm"
+            snippet = "trash"
+            if = "(( ${+commands[trash]} ))"
 
-              - name: rm -r
-                abbr: rm
-                snippet: rm -r
+            [[abbrevs]]
+            name = "rm -r"
+            abbr = "rm"
+            snippet = "rm -r"
 
-              - name: never matched
-                abbr: rm
-                snippet: never
+            [[abbrevs]]
+            name = "never matched"
+            abbr = "rm"
+            snippet = "never"
 
-              - name: cd ..
-                abbr-pattern: \.\.$
-                snippet: cd $abbr
-                evaluate: true
+            [[abbrevs]]
+            name = "cd .."
+            abbr-pattern = '\.\.$'
+            snippet = "cd $abbr"
+            evaluate = true
 
-              - name: .N
-                abbr-pattern: ^\.(?<n>\d+)$
-                snippet: awk '{print \$$n}'
-                evaluate: true
-            ",
+            [[abbrevs]]
+            name = ".N"
+            abbr-pattern = '^\.(?<n>\d+)$'
+            snippet = "awk '{print \\$$n}'"
+            evaluate = true
+            "#,
         )
         .unwrap()
     }

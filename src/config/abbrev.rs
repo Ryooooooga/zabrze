@@ -6,7 +6,7 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum ExpandError {
     #[error("invalid regex: {0}")]
-    RegexError(#[from] regex::Error),
+    Regex(#[from] regex::Error),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
