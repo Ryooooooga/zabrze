@@ -75,7 +75,7 @@ impl Config {
         self.snippets.append(&mut other.snippets);
     }
 
-    fn config_file_paths(config_dir: &Path) -> io::Result<Vec<PathBuf>> {
+    pub fn config_file_paths(config_dir: &Path) -> io::Result<Vec<PathBuf>> {
         let mut paths = Vec::new();
 
         for entry in read_dir(config_dir)? {
