@@ -26,6 +26,7 @@ pub struct Expansion<'a> {
     pub variables: Vec<ExpansionVariable<'a>>,
     pub evaluate: bool,
     pub has_placeholder: bool,
+    pub abort_on_error: bool,
 }
 
 pub fn run(args: &ExpandArgs) {
@@ -42,8 +43,7 @@ pub fn run(args: &ExpandArgs) {
     let command = escape(Cow::from(result.command));
     let trigger = escape(Cow::from(result.last_arg));
 
-    print!(r#"local command={command};"#);
-    print!(r#"local abbr={trigger} trigger={trigger};"#);
+    print!(r#"local command={command} trigger={trigger} abbr={trigger};"#); // `abbr` is deprecated, remain for backward compatibility
 
     let mut has_if = false;
     for expansion in &result.expansions {
@@ -53,7 +53,8 @@ pub fn run(args: &ExpandArgs) {
         let condition = expansion.condition.map(|c| escape(Cow::from(c)));
 
         let rbuffer = escape(Cow::from(rbuffer));
-        let evaluate = if expansion.evaluate { "(e)" } else { "" };
+        let eval_flag = if expansion.evaluate { "(e)" } else { "" };
+        let has_placeholder = if expansion.has_placeholder { "1" } else { "" };
 
         if let Some(condition) = &condition {
             if !has_if {
@@ -72,16 +73,19 @@ pub fn run(args: &ExpandArgs) {
             print!(r#"local {name}={value};"#);
         }
 
-        print!(r"local left_snippet={left_snippet};");
-        if expansion.has_placeholder {
-            print!(r"local right_snippet={right_snippet};");
-            print!(r#"LBUFFER={prefix}"${{{evaluate}left_snippet}}";"#);
-            print!(r#"RBUFFER="${{{evaluate}right_snippet}}"{rbuffer};"#);
-            print!(r"__zabrze_has_placeholder=1;");
+        print!(r"local left_snippet={left_snippet} right_snippet={right_snippet};");
+        if expansion.abort_on_error {
+            print!(r#"local lbuffer rbuffer;"#);
+            print!(r#"if lbuffer={prefix}"${{{eval_flag}left_snippet}}" && "#);
+            print!(r#"rbuffer="${{{eval_flag}right_snippet}}"{rbuffer};then "#);
+            print!(r#"LBUFFER="${{lbuffer}}";"#);
+            print!(r#"RBUFFER="${{rbuffer}}";"#);
+            print!(r"__zabrze_has_placeholder={has_placeholder};");
+            print!(r#"fi"#);
         } else {
-            print!(r#"LBUFFER={prefix}"${{{evaluate}left_snippet}}";"#);
-            print!(r#"RBUFFER={rbuffer};"#);
-            print!(r"__zabrze_has_placeholder=;");
+            print!(r#"LBUFFER={prefix}"${{{eval_flag}left_snippet}}";"#);
+            print!(r#"RBUFFER="${{{eval_flag}right_snippet}}"{rbuffer};"#);
+            print!(r"__zabrze_has_placeholder={has_placeholder};");
         }
 
         if condition.is_none() {
@@ -139,6 +143,7 @@ fn expand<'a>(config: &'a Config, lbuffer: &'a str) -> ExpandResult<'a> {
                 .collect(),
             evaluate: m.evaluate(),
             has_placeholder: m.has_placeholder(),
+            abort_on_error: m.abort_on_error(),
         })
         .collect();
 
@@ -262,6 +267,7 @@ mod tests {
                         variables: vec![],
                         evaluate: false,
                         has_placeholder: false,
+                        abort_on_error: false,
                     }],
                 },
             },
@@ -279,6 +285,7 @@ mod tests {
                         variables: vec![],
                         evaluate: false,
                         has_placeholder: false,
+                        abort_on_error: false,
                     }],
                 },
             },
@@ -296,6 +303,7 @@ mod tests {
                         variables: vec![],
                         evaluate: false,
                         has_placeholder: false,
+                        abort_on_error: false,
                     }],
                 },
             },
@@ -313,6 +321,7 @@ mod tests {
                         variables: vec![],
                         evaluate: false,
                         has_placeholder: false,
+                        abort_on_error: false,
                     }],
                 },
             },
@@ -348,6 +357,7 @@ mod tests {
                         variables: vec![],
                         evaluate: true,
                         has_placeholder: false,
+                        abort_on_error: false,
                     }],
                 },
             },
@@ -365,6 +375,7 @@ mod tests {
                         variables: vec![],
                         evaluate: false,
                         has_placeholder: true,
+                        abort_on_error: false,
                     }],
                 },
             },
@@ -382,6 +393,7 @@ mod tests {
                         variables: vec![],
                         evaluate: false,
                         has_placeholder: false,
+                        abort_on_error: false,
                     }],
                 },
             },
@@ -399,6 +411,7 @@ mod tests {
                         variables: vec![],
                         evaluate: true,
                         has_placeholder: false,
+                        abort_on_error: false,
                     }],
                 },
             },
@@ -416,6 +429,7 @@ mod tests {
                         variables: vec![],
                         evaluate: true,
                         has_placeholder: false,
+                        abort_on_error: false,
                     }],
                 },
             },
@@ -434,6 +448,7 @@ mod tests {
                             variables: vec![],
                             evaluate: false,
                             has_placeholder: false,
+                            abort_on_error: false,
                         },
                         Expansion {
                             replacing_index: 0,
@@ -443,6 +458,7 @@ mod tests {
                             variables: vec![],
                             evaluate: false,
                             has_placeholder: false,
+                            abort_on_error: false,
                         },
                     ],
                 },
@@ -464,6 +480,7 @@ mod tests {
                         }],
                         evaluate: true,
                         has_placeholder: false,
+                        abort_on_error: false,
                     }],
                 },
             },

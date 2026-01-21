@@ -112,3 +112,60 @@ name = ".N"
 trigger-pattern = '^\.(?<n>\d+)$'
 snippet = "awk '{ print \\$$n }'"
 evaluate = true
+
+# abort-on-error
+[[snippets]]
+name = "eval_success_abort"
+trigger = "esuccess"
+snippet = "$(echo SUCCESS)"
+evaluate = true
+abort-on-error = true
+
+[[snippets]]
+name = "eval_fail_abort"
+trigger = "efail"
+snippet = "$(echo FAIL; false)"
+evaluate = true
+abort-on-error = true
+
+[[snippets]]
+name = "eval_fail_abort_only_last"
+trigger = "efailsuccess"
+snippet = "$(echo FAIL; false)$(echo SUCCESS)"
+evaluate = true
+abort-on-error = true
+
+[[snippets]]
+name = "eval_fail_abort_unknown"
+trigger = "eunknown"
+snippet = "$(echo UNKNOWN; unknown_command)"
+evaluate = true
+abort-on-error = true
+
+[[snippets]]
+name = "eval_fail_no_abort"
+trigger = "efailnoabort"
+snippet = "$(echo FAIL; false)"
+evaluate = true
+abort-on-error = false
+
+[[snippets]]
+name = "eval_success_abort_placeholder_success_success"
+trigger = "eplaceholder"
+snippet = "$(echo SUCCESS){}$(echo SUCCESS)"
+evaluate = true
+abort-on-error = true
+
+[[snippets]]
+name = "eval_fail_abort_placeholder_fail_success"
+trigger = "eplaceholder_left"
+snippet = "$(echo FAIL; false){}$(echo SUCCESS)"
+evaluate = true
+abort-on-error = true
+
+[[snippets]]
+name = "eval_fail_abort_placeholder_success_fail"
+trigger = "eplaceholder_right"
+snippet = "$(echo SUCCESS){}$(echo FAIL; false)"
+evaluate = true
+abort-on-error = true

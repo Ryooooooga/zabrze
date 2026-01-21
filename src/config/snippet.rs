@@ -92,6 +92,9 @@ pub struct Snippet {
 
     #[serde(default = "default_as_false")]
     pub evaluate: bool,
+
+    #[serde(rename = "abort-on-error", default = "default_as_false")]
+    pub abort_on_error: bool,
 }
 
 impl Snippet {
@@ -193,6 +196,10 @@ impl<'a> Match<'a> {
     pub fn evaluate(&self) -> bool {
         self.snippet.evaluate
     }
+
+    pub fn abort_on_error(&self) -> bool {
+        self.snippet.abort_on_error
+    }
 }
 
 #[derive(Debug)]
@@ -240,6 +247,7 @@ mod tests {
                     condition: None,
                     global: false,
                     evaluate: false,
+                    abort_on_error: false,
                 },
                 command: "test",
                 last_arg: "test",
@@ -262,6 +270,7 @@ mod tests {
                     condition: None,
                     global: false,
                     evaluate: false,
+                    abort_on_error: false,
                 },
                 command: "echo test",
                 last_arg: "test",
@@ -279,6 +288,7 @@ mod tests {
                     condition: None,
                     global: true,
                     evaluate: false,
+                    abort_on_error: false,
                 },
                 command: "echo test",
                 last_arg: "test",
@@ -301,6 +311,7 @@ mod tests {
                     condition: None,
                     global: true,
                     evaluate: false,
+                    abort_on_error: false,
                 },
                 command: "echo test",
                 last_arg: "test",
@@ -323,6 +334,7 @@ mod tests {
                     condition: None,
                     global: true,
                     evaluate: false,
+                    abort_on_error: false,
                 },
                 command: "echo test",
                 last_arg: "test",
@@ -340,6 +352,7 @@ mod tests {
                     condition: None,
                     global: true,
                     evaluate: false,
+                    abort_on_error: false,
                 },
                 command: "echo test",
                 last_arg: "test",
@@ -357,6 +370,7 @@ mod tests {
                     condition: None,
                     global: false,
                     evaluate: false,
+                    abort_on_error: false,
                 },
                 command: "test",
                 last_arg: "test",
@@ -379,6 +393,7 @@ mod tests {
                     condition: None,
                     global: false,
                     evaluate: false,
+                    abort_on_error: false,
                 },
                 command: "test",
                 last_arg: "test",
@@ -401,6 +416,7 @@ mod tests {
                     condition: None,
                     global: false,
                     evaluate: false,
+                    abort_on_error: false,
                 },
                 command: "test",
                 last_arg: "test",
@@ -423,6 +439,7 @@ mod tests {
                     condition: None,
                     global: false,
                     evaluate: false,
+                    abort_on_error: false,
                 },
                 command: "test.py",
                 last_arg: "test.py",
@@ -445,6 +462,7 @@ mod tests {
                     condition: None,
                     global: false,
                     evaluate: false,
+                    abort_on_error: false,
                 },
                 command: ".3",
                 last_arg: ".3",
@@ -470,6 +488,7 @@ mod tests {
                     condition: None,
                     global: false,
                     evaluate: false,
+                    abort_on_error: false,
                 },
                 command: ".42",
                 last_arg: ".42",
