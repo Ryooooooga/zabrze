@@ -75,11 +75,10 @@ pub fn run(args: &ExpandArgs) {
 
         print!(r"local left_snippet={left_snippet} right_snippet={right_snippet};");
         if expansion.abort_on_error {
-            print!(r#"local lbuffer rbuffer;"#);
-            print!(r#"if lbuffer={prefix}"${{{eval_flag}left_snippet}}" && "#);
-            print!(r#"rbuffer="${{{eval_flag}right_snippet}}"{rbuffer};then "#);
-            print!(r#"LBUFFER="${{lbuffer}}";"#);
-            print!(r#"RBUFFER="${{rbuffer}}";"#);
+            print!(r#"if left_snippet="${{{eval_flag}left_snippet}}" && "#);
+            print!(r#"right_snippet="${{{eval_flag}right_snippet}}";then "#);
+            print!(r#"LBUFFER={prefix}"${{left_snippet}}";"#);
+            print!(r#"RBUFFER="${{right_snippet}}"{rbuffer};"#);
             print!(r"__zabrze_has_placeholder={has_placeholder};");
             print!(r#"fi"#);
         } else {
