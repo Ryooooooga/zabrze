@@ -24,18 +24,25 @@ try() {
     RBUFFER="$rbuffer"
     eval "$out"
 
+    local fail=0
     if [ "$LBUFFER" != "$expected_lbuffer" ]; then
         echo "LBUFFER not matched (expected: '$expected_lbuffer', actual: '$LBUFFER')"
-        result=1
+        fail=1
     fi
 
     if [ "$RBUFFER" != "$expected_rbuffer" ]; then
         echo "RBUFFER not matched (expected: '$expected_rbuffer', actual: '$RBUFFER')"
-        result=1
+        fail=1
     fi
 
     if [ "$__zabrze_has_placeholder" != "$expected_placeholder" ]; then
         echo "__zabrze_has_placeholder not matched (expected: '$expected_placeholder', actual: '$__zabrze_has_placeholder')"
+        fail=1
+    fi
+
+    if (( fail )); then
+        echo "output was:" >/dev/stderr
+        echo "$out" >/dev/stderr
         result=1
     fi
 }
