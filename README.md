@@ -186,6 +186,7 @@ The configuration file (TOML) defines a list of abbreviations. Each abbreviation
 - `evaluate` (boolean): A boolean value indicating whether the snippet should be evaluated as a shell command. Defaults to `false`.
 - `if` (string): A conditional expression that must evaluate to true for the abbreviation to be expanded.
 - `cursor` (string or `null`): A string that specifies the cursor position after expansion. Defaults to `{}`.
+- `abort-on-error` (boolean): **Experimental:** When `evaluate` is `true`, this option controls the behavior when a command inside the snippet fails. If `true`, the snippet expansion will be aborted if the command substitution fails. Defaults to `false`.
 
 ## Alternatives
 

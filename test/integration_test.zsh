@@ -84,6 +84,16 @@ try "2"             ""          "otherfile"                     ""              
 try "cat a | .1"    ""          "cat a | awk '{ print \$1 }'"   ""              ""
 try "cat a | .2"    ""          "cat a | awk '{ print \$2 }'"   ""              ""
 
+# Test cases for abort-on-error
+try "esuccess"      ""          "SUCCESS"                       ""              ""
+try "efail"         ""          "efail"                         ""              ""
+try "efailsuccess"  ""          "FAILSUCCESS"                   ""              ""
+try "eunknown"      ""          "eunknown"                      ""              ""
+try "efailnoabort"  ""          "FAIL"                          ""              ""
+try "eplaceholder"  ""          "SUCCESS"                       "SUCCESS"       "1"
+try "eplaceholder_left" ""      "eplaceholder_left"             ""              ""
+try "eplaceholder_right" ""     "eplaceholder_right"            ""              ""
+
 if [ "$result" -ne 0 ]; then
     echo "test failed!!" >/dev/stderr
     exit 1
