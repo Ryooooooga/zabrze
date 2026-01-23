@@ -1,0 +1,11 @@
+[[snippets]]
+trigger = "B"
+snippet = "banana"
+
+[[snippets]]
+trigger = "Y"
+snippet = "yellow"
+
+[[snippets]]
+trigger = "Z"
+snippet = "zinc"

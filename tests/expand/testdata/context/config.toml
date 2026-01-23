@@ -1,0 +1,27 @@
+
+[[snippets]]
+name = "git commit"
+trigger = "c"
+snippet = "commit"
+global = true
+context = '^git\s'
+
+[[snippets]]
+name = "git commit -m"
+trigger = "cm"
+snippet = "commit -m '{}'"
+cursor = "{}"
+global = true
+context = '^git\s'
+
+[[snippets]]
+trigger = "aa"
+snippet = "add -vA"
+global = true
+context = '^git\s'
+
+[[snippets]]
+trigger = "-f"
+snippet = "--force-with-lease"
+global = true
+context = '^git(\s+\S+)*\s+push\s'

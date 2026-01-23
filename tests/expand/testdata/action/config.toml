@@ -1,0 +1,13 @@
+[[snippets]]
+trigger = "i"
+snippet = "sudo apt install -y"
+action = "replace-all"
+global = true
+context = '^apt\s'
+
+[[snippets]]
+trigger = "i"
+snippet = "install"
+action = "replace-last"
+global = true
+context = '^npm\s'

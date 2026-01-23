@@ -1,0 +1,13 @@
+[[snippets]]
+trigger = "["
+snippet = "[ {} ]"
+
+[[snippets]]
+trigger = "[["
+snippet = "[[ 👇 ]]"
+cursor = "👇"
+
+[[snippets]]
+trigger = "xargsi"
+snippet = "xargs -I{} "
+cursor = ""

@@ -1,0 +1,52 @@
+[[snippets]]
+trigger = "simple"
+snippet = "SUCCESS"
+abort-on-error = true
+
+[[snippets]]
+trigger = "success"
+snippet = "$(echo SUCCESS)"
+evaluate = true
+abort-on-error = true
+
+[[snippets]]
+trigger = "fail"
+snippet = "$(echo FAIL; false)"
+evaluate = true
+abort-on-error = true
+
+[[snippets]]
+trigger = "fail_success"
+snippet = "$(echo FAIL; false)_$(echo SUCCESS)"
+evaluate = true
+abort-on-error = true
+
+[[snippets]]
+trigger = "unknown"
+snippet = "$(echo UNKNOWN; unknown_command)"
+evaluate = true
+abort-on-error = true
+
+[[snippets]]
+trigger = "no_abort"
+snippet = "$(echo FAIL; false)"
+evaluate = true
+abort-on-error = false
+
+[[snippets]]
+trigger = "placeholder_success_success"
+snippet = "$(echo SUCCESS){}$(echo SUCCESS)"
+evaluate = true
+abort-on-error = true
+
+[[snippets]]
+trigger = "eplaceholder_fail_success"
+snippet = "$(echo FAIL; false){}$(echo SUCCESS)"
+evaluate = true
+abort-on-error = true
+
+[[snippets]]
+trigger = "eplaceholder_success_fails"
+snippet = "$(echo SUCCESS){}$(echo FAIL; false)"
+evaluate = true
+abort-on-error = true

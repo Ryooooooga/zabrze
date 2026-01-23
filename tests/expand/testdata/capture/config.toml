@@ -1,0 +1,11 @@
+[[snippets]]
+name = ".N"
+trigger-pattern = '^\.(?<n>\d+)$'
+snippet = "awk '{ print \\$$n }'"
+evaluate = true
+
+[[snippets]]
+name = "python3 *.py"
+trigger-pattern = '^(?<file>.+\.py)$'
+snippet = "python3 $file"
+evaluate = true

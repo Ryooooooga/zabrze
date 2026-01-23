@@ -1,0 +1,5 @@
+[[snippets]]
+name = ">/dev/null 2>&1"
+trigger = "null"
+snippet = ">/dev/null 2>&1"
+global = true

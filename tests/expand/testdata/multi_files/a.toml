@@ -1,0 +1,12 @@
+[[snippets]]
+trigger = "A"
+snippet = "apple"
+
+[[snippets]]
+trigger = "Y"
+snippet = "yogurt"
+
+[[snippets]]
+trigger = "Z"
+snippet = "zebra"
+if = "false"

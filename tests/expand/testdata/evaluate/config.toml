@@ -1,0 +1,12 @@
+[[snippets]]
+name = "view"
+trigger = "view"
+snippet = "${EDITOR} -R"
+evaluate = true
+
+[[snippets]]
+name = "42"
+trigger = "ANSWER"
+snippet = "The answer is $(echo $((6*7)))"
+evaluate = true
+global = true

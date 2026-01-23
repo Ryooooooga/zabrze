@@ -1,3 +1,4 @@
+mod expand;
 mod init;
 
 use std::{env, process::Command};

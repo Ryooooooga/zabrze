@@ -1,0 +1,18 @@
+[[snippets]]
+trigger = "cond1"
+snippet = "TRUE"
+if = "[[ $ZABRZE_TEST = 1 ]]"
+
+[[snippets]]
+trigger = "cond2"
+snippet = "FALSE"
+if = "[[ $ZABRZE_TEST = 0 ]]"
+
+[[snippets]]
+trigger = "cond3"
+snippet = "TRUE"
+if = "(( ZABRZE_TEST == 0 ))"
+
+[[snippets]]
+trigger = "cond3"
+snippet = "FALLBACK"

@@ -1,0 +1,15 @@
+[[snippets]]
+trigger-pattern = '^\.\.(/\.\.)*/?$'
+snippet = "cd $trigger"
+evaluate = true
+
+[[snippets]]
+trigger-pattern = '\.ts$'
+snippet = "deno run $trigger"
+evaluate = true
+
+[[snippets]]
+name = ".N"
+trigger-pattern = '^\.\d+$'
+snippet = "awk '{ print ${trigger/./$} }'"
+evaluate = true
