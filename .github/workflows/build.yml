@@ -33,11 +33,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - run: cargo build --verbose --all --all-targets --all-features
-      - run: cargo test --verbose --all --all-targets --all-features
-
       - run: sudo apt-get install zsh
         if: ${{ matrix.os == 'ubuntu-latest' }}
+
+      - run: cargo build --verbose --all --all-targets --all-features
+      - run: cargo test --verbose --all --all-targets --all-features
 
       - run: |
           export PATH="$PWD/target/debug:$PATH"
