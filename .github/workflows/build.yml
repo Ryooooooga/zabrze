@@ -39,10 +39,6 @@ jobs:
       - run: cargo build --verbose --all --all-targets --all-features
       - run: cargo test --verbose --all --all-targets --all-features
 
-      - run: |
-          export PATH="$PWD/target/debug:$PATH"
-          ./test/integration_test.zsh
-
   release-build:
     strategy:
       fail-fast: false

@@ -621,3 +621,334 @@ fn test_abort_on_error() {
         },
     );
 }
+
+#[test]
+fn test_legacy_yaml() {
+    let config_dirname = "legacy_yaml";
+    run_test(
+        config_dirname,
+        ("g", ""),
+        TestResult::Matched {
+            lbuffer: "git",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("  g", ""),
+        TestResult::Matched {
+            lbuffer: "  git",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("g", "add"),
+        TestResult::Matched {
+            lbuffer: "git",
+            rbuffer: "add",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("g", " add"),
+        TestResult::Matched {
+            lbuffer: "git",
+            rbuffer: " add",
+            placeholder: "",
+        },
+    );
+    run_test(config_dirname, ("echo g", ""), TestResult::Unmatched);
+    run_test(
+        config_dirname,
+        ("echo a; g", ""),
+        TestResult::Matched {
+            lbuffer: "echo a; git",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("view", ""),
+        TestResult::Matched {
+            lbuffer: "vim -R",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("echo ANSWER", ""),
+        TestResult::Matched {
+            lbuffer: "echo answer is 42",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("git aa", ""),
+        TestResult::Matched {
+            lbuffer: "git add -vA",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(config_dirname, ("echo git aa", ""), TestResult::Unmatched);
+    run_test(
+        config_dirname,
+        ("git -f", ""),
+        TestResult::Matched {
+            lbuffer: "git -f",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("git push -f", ""),
+        TestResult::Matched {
+            lbuffer: "git push --force-with-lease",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("git cm", ""),
+        TestResult::Matched {
+            lbuffer: "git commit -m '",
+            rbuffer: "'",
+            placeholder: "1",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("git cm", " -v"),
+        TestResult::Matched {
+            lbuffer: "git commit -m '",
+            rbuffer: "' -v",
+            placeholder: "1",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("apt install", "zsh"),
+        TestResult::Matched {
+            lbuffer: "sudo apt install -y",
+            rbuffer: "zsh",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("[", ""),
+        TestResult::Matched {
+            lbuffer: "[ ",
+            rbuffer: " ]",
+            placeholder: "1",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("[[", ""),
+        TestResult::Matched {
+            lbuffer: "[[ ",
+            rbuffer: " ]]",
+            placeholder: "1",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("xargsi", ""),
+        TestResult::Matched {
+            lbuffer: "xargs -I{} ",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("..", ""),
+        TestResult::Matched {
+            lbuffer: "cd ..",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("../..", ""),
+        TestResult::Matched {
+            lbuffer: "cd ../..",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("../../..", ""),
+        TestResult::Matched {
+            lbuffer: "cd ../../..",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("; placeholder", ""),
+        TestResult::Matched {
+            lbuffer: "; ab",
+            rbuffer: "cd placeholder",
+            placeholder: "1",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("yes | ./a.ts", ""),
+        TestResult::Matched {
+            lbuffer: "yes | deno run ./a.ts",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("yes | ./ab.ts", ""),
+        TestResult::Matched {
+            lbuffer: "yes | deno run ./ab.ts",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("cond", ""),
+        TestResult::Matched {
+            lbuffer: "conditional snippet",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("cond2", ""),
+        TestResult::Matched {
+            lbuffer: "cond2",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("cond3", ""),
+        TestResult::Matched {
+            lbuffer: "conditional fallback",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("2", ""),
+        TestResult::Matched {
+            lbuffer: "otherfile",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("cat a | .1", ""),
+        TestResult::Matched {
+            lbuffer: "cat a | awk '{ print $1 }'",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("cat a | .2", ""),
+        TestResult::Matched {
+            lbuffer: "cat a | awk '{ print $2 }'",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("esuccess", ""),
+        TestResult::Matched {
+            lbuffer: "SUCCESS",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("efail", ""),
+        TestResult::Matched {
+            lbuffer: "efail",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("efailsuccess", ""),
+        TestResult::Matched {
+            lbuffer: "FAILSUCCESS",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("eunknown", ""),
+        TestResult::Matched {
+            lbuffer: "eunknown",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("efailnoabort", ""),
+        TestResult::Matched {
+            lbuffer: "FAIL",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("eplaceholder", ""),
+        TestResult::Matched {
+            lbuffer: "SUCCESS",
+            rbuffer: "SUCCESS",
+            placeholder: "1",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("eplaceholder_left", ""),
+        TestResult::Matched {
+            lbuffer: "eplaceholder_left",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+    run_test(
+        config_dirname,
+        ("eplaceholder_right", ""),
+        TestResult::Matched {
+            lbuffer: "eplaceholder_right",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+}

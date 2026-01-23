@@ -1,0 +1,145 @@
+snippets:
+  # simple
+  - name: git
+    trigger: g
+    snippet: git
+
+  # global
+  - name: ">null"
+    trigger: ">null"
+    snippet: ">/dev/null 2>&1"
+    global: true
+
+  # evaluate
+  - name: view
+    trigger: view
+    snippet: ${EDITOR} -R
+    evaluate: true
+
+  # global+evaluate
+  - name: "42"
+    trigger: ANSWER
+    snippet: answer is $(echo $((6*7)))
+    evaluate: true
+    global: true
+
+  # global+context
+  - trigger: aa
+    snippet: add -vA
+    global: true
+    context: ^git\s
+
+  - trigger: -f
+    snippet: --force-with-lease
+    global: true
+    context: ^git(\s+\S+)*\s+push\s
+
+  # global+placeholder
+  - trigger: cm
+    snippet: commit -m '{}'
+    global: true
+    context: ^git\s
+
+  # replace-all
+  - trigger: install
+    snippet: sudo apt install -y
+    action: replace-all
+    global: true
+    context: ^apt\s
+
+  - trigger: "["
+    snippet: "[ {} ]"
+    action: replace-all
+
+  - trigger: "[["
+    snippet: "[[ 👇 ]]"
+    cursor: "👇"
+    action: replace-all
+
+  - trigger: "xargsi"
+    snippet: "xargs -I{} "
+    cursor: null
+
+  # $trigger
+  - trigger-pattern: ^\.\.(/\.\.)*/?$
+    snippet: cd $trigger
+    evaluate: true
+
+  - trigger: placeholder
+    snippet: ab{}cd placeholder
+
+  # suffix aliases
+  - trigger-pattern: \.ts$
+    snippet: deno run $trigger
+    evaluate: true
+
+  # conditional
+  - trigger: cond
+    snippet: conditional snippet
+    if: "[[ $ZABRZE_TEST = 1 ]]"
+
+  - trigger: cond2
+    snippet: conditional snippet
+    if: "[[ $ZABRZE_TEST = 0 ]]"
+
+  - trigger: cond3
+    snippet: conditional snippet
+    if: "[[ $ZABRZE_TEST = 0 ]]"
+
+  - trigger: cond3
+    snippet: conditional fallback
+
+  # capture
+  - name: ".N"
+    trigger-pattern: ^\.(?<n>\d+)$
+    snippet: awk '{ print \$$n }'
+    evaluate: true
+
+  # abort-on-error
+  - name: eval_success_abort
+    trigger: esuccess
+    snippet: $(echo SUCCESS)
+    evaluate: true
+    abort-on-error: true
+
+  - name: eval_fail_abort
+    trigger: efail
+    snippet: $(echo FAIL; false)
+    evaluate: true
+    abort-on-error: true
+
+  - name: eval_fail_abort_only_last
+    trigger: efailsuccess
+    snippet: $(echo FAIL; false)$(echo SUCCESS)
+    evaluate: true
+    abort-on-error: true
+
+  - name: eval_fail_abort_unknown
+    trigger: eunknown
+    snippet: $(echo UNKNOWN; unknown_command)
+    evaluate: true
+    abort-on-error: true
+
+  - name: eval_fail_no_abort
+    trigger: efailnoabort
+    snippet: $(echo FAIL; false)
+    evaluate: true
+    abort-on-error: false
+
+  - name: eval_success_abort_placeholder_success_success
+    trigger: eplaceholder
+    snippet: $(echo SUCCESS){}$(echo SUCCESS)
+    evaluate: true
+    abort-on-error: true
+
+  - name: eval_fail_abort_placeholder_fail_success
+    trigger: eplaceholder_left
+    snippet: $(echo FAIL; false){}$(echo SUCCESS)
+    evaluate: true
+    abort-on-error: true
+
+  - name: eval_fail_abort_placeholder_success_fail
+    trigger: eplaceholder_right
+    snippet: $(echo SUCCESS){}$(echo FAIL; false)
+    evaluate: true
+    abort-on-error: true
