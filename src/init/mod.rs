@@ -9,10 +9,9 @@ static INIT_SCRIPT: &str = include_str!("zabrze-init.zsh");
 static BIND_KEYS_SCRIPT: &str = include_str!("zabrze-bindkey.zsh");
 
 fn warn_yaml_config_deprecation() {
-    if let Some(config_dir) = config::get_default_config_dir() {
-        let config_paths = Config::config_file_paths(Path::new(&config_dir))
-            .expect("failed to read config directory");
-
+    if let Some(config_dir) = config::get_default_config_dir()
+        && let Ok(config_paths) = Config::config_file_paths(Path::new(&config_dir))
+    {
         let mut has_yaml = false;
         for path in &config_paths {
             if let Some(ext) = path.extension()
