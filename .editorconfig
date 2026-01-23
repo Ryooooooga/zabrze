@@ -19,4 +19,4 @@ indent_size = 2
 
 [*.zsh]
 indent_style = space
-indent_size = 4
+indent_size = 2

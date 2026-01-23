@@ -2,49 +2,49 @@
 result=0
 
 try() {
-    local lbuffer="$1"
-    local rbuffer="$2"
-    local expected_lbuffer="$3"
-    local expected_rbuffer="$4"
-    local expected_placeholder="$5"
+  local lbuffer="$1"
+  local rbuffer="$2"
+  local expected_lbuffer="$3"
+  local expected_rbuffer="$4"
+  local expected_placeholder="$5"
 
-    echo "try $lbuffer:$rbuffer"
+  echo "try $lbuffer:$rbuffer"
 
-    local out exit_code
-    out="$(zabrze expand --lbuffer="$lbuffer" --rbuffer="$rbuffer")"
-    exit_code="$?"
-    if [ "$exit_code" -ne 0 ]; then
-        echo "  zabrze expand failed with status $exit_code" >/dev/stderr
-        result=1
-        return
-    fi
+  local out exit_code
+  out="$(zabrze expand --lbuffer="$lbuffer" --rbuffer="$rbuffer")"
+  exit_code="$?"
+  if [ "$exit_code" -ne 0 ]; then
+    echo "  zabrze expand failed with status $exit_code" >/dev/stderr
+    result=1
+    return
+  fi
 
-    local LBUFFER RBUFFER __zabrze_has_placeholder
-    LBUFFER="$lbuffer"
-    RBUFFER="$rbuffer"
-    eval "$out"
+  local LBUFFER RBUFFER __zabrze_has_placeholder
+  LBUFFER="$lbuffer"
+  RBUFFER="$rbuffer"
+  eval "$out"
 
-    local fail=0
-    if [ "$LBUFFER" != "$expected_lbuffer" ]; then
-        echo "LBUFFER not matched (expected: '$expected_lbuffer', actual: '$LBUFFER')"
-        fail=1
-    fi
+  local fail=0
+  if [ "$LBUFFER" != "$expected_lbuffer" ]; then
+    echo "LBUFFER not matched (expected: '$expected_lbuffer', actual: '$LBUFFER')"
+    fail=1
+  fi
 
-    if [ "$RBUFFER" != "$expected_rbuffer" ]; then
-        echo "RBUFFER not matched (expected: '$expected_rbuffer', actual: '$RBUFFER')"
-        fail=1
-    fi
+  if [ "$RBUFFER" != "$expected_rbuffer" ]; then
+    echo "RBUFFER not matched (expected: '$expected_rbuffer', actual: '$RBUFFER')"
+    fail=1
+  fi
 
-    if [ "$__zabrze_has_placeholder" != "$expected_placeholder" ]; then
-        echo "__zabrze_has_placeholder not matched (expected: '$expected_placeholder', actual: '$__zabrze_has_placeholder')"
-        fail=1
-    fi
+  if [ "$__zabrze_has_placeholder" != "$expected_placeholder" ]; then
+    echo "__zabrze_has_placeholder not matched (expected: '$expected_placeholder', actual: '$__zabrze_has_placeholder')"
+    fail=1
+  fi
 
-    if (( fail )); then
-        echo "output was:" >/dev/stderr
-        echo "$out" >/dev/stderr
-        result=1
-    fi
+  if (( fail )); then
+    echo "output was:" >/dev/stderr
+    echo "$out" >/dev/stderr
+    result=1
+  fi
 }
 
 export ZABRZE_CONFIG_HOME="${0:a:h}"
@@ -95,8 +95,8 @@ try "eplaceholder_left" ""      "eplaceholder_left"             ""              
 try "eplaceholder_right" ""     "eplaceholder_right"            ""              ""
 
 if [ "$result" -ne 0 ]; then
-    echo "test failed!!" >/dev/stderr
-    exit 1
+  echo "test failed!!" >/dev/stderr
+  exit 1
 fi
 
 echo "test passed!!"
