@@ -78,7 +78,13 @@ impl Config {
     pub fn config_file_paths(config_dir: &Path) -> io::Result<Vec<PathBuf>> {
         let mut paths = Vec::new();
 
-        for entry in read_dir(config_dir)? {
+        let dir = match read_dir(config_dir) {
+            Ok(d) => d,
+            Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(paths),
+            Err(e) => return Err(e),
+        };
+
+        for entry in dir {
             let entry = entry?;
             if entry.file_type()?.is_file() {
                 let path = entry.path();
