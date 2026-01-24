@@ -88,6 +88,13 @@ fn test_empty() {
 }
 
 #[test]
+fn test_no_dir() {
+    let config_dirname = "no_dir";
+    run_test(config_dirname, ("", ""), TestResult::Unmatched);
+    run_test(config_dirname, ("g", ""), TestResult::Unmatched);
+}
+
+#[test]
 fn test_basic_toml() {
     let config_dirname = "basic_toml";
     run_test(config_dirname, ("", ""), TestResult::Unmatched);
