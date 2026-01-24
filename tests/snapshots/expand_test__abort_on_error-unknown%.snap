@@ -1,6 +1,6 @@
 ---
-source: tests/expand/mod.rs
-assertion_line: 76
+source: tests/expand_test.rs
+assertion_line: 67
 expression: result_stderr
 ---
 zsh:2: command not found: unknown_command

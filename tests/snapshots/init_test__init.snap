@@ -1,6 +1,6 @@
 ---
-source: tests/init/mod.rs
-assertion_line: 21
+source: tests/init_test.rs
+assertion_line: 10
 expression: stdout
 ---
 zle -N __zabrze::expand

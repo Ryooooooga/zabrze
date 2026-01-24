@@ -1,6 +1,8 @@
+mod helpers;
+
 use std::path::Path;
 
-use crate::{cli, zsh};
+use crate::helpers::{cli, run_command, run_command_outputs, zsh};
 
 #[derive(Debug)]
 enum TestResult<'a> {
@@ -19,16 +21,11 @@ fn run_test(config_dirname: &str, (lbuffer, rbuffer): (&str, &str), expected: Te
         .join("testdata")
         .join(config_dirname);
 
-    let output = cli()
-        .args(&["expand", "--lbuffer", lbuffer, "--rbuffer", rbuffer])
-        .env("ZABRZE_CONFIG_HOME", config_dir)
-        .output()
-        .expect("Failed to execute expand");
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let stderr = String::from_utf8_lossy(&output.stderr);
-
-    assert_eq!(stderr, "");
-    assert!(output.status.success());
+    let stdout = run_command(
+        cli()
+            .args(&["expand", "--lbuffer", lbuffer, "--rbuffer", rbuffer])
+            .env("ZABRZE_CONFIG_HOME", config_dir),
+    );
 
     let (expected_lbuffer, expected_rbuffer, expected_placeholder) = match expected {
         TestResult::Unmatched => {
@@ -54,18 +51,12 @@ EOF
         "#
     );
 
-    let result = zsh()
-        .arg("-c")
-        .arg(cmd)
-        .envs([("LBUFFER", lbuffer), ("RBUFFER", rbuffer)])
-        .env("EDITOR", "vim")
-        .env("ZABRZE_TEST", "1")
-        .output()
-        .expect("Failed to execute zsh with expand output");
-    let result_stdout = String::from_utf8_lossy(&result.stdout);
-    let result_stderr = String::from_utf8_lossy(&result.stderr);
-
-    assert!(result.status.success());
+    let (result_stdout, result_stderr) = run_command_outputs(zsh().args(&["-c", &cmd]).envs([
+        ("LBUFFER", lbuffer),
+        ("RBUFFER", rbuffer),
+        ("EDITOR", "vim"),
+        ("ZABRZE_TEST", "1"),
+    ]));
 
     let expected_output = format!(
         "LBUFFER={expected_lbuffer}\nRBUFFER={expected_rbuffer}\n__zabrze_has_placeholder={expected_placeholder}\n"
