@@ -17,7 +17,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
 shell-escape = "0.1"
 thiserror = "2.0"
-toml = "0.9"
+toml = "1.0"
 
 [dev-dependencies]
 insta = "1.46"
