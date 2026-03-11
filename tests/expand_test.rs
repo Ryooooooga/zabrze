@@ -950,3 +950,17 @@ fn test_legacy_yaml() {
         },
     );
 }
+
+#[test]
+fn test_symlink() {
+    let config_dirname = "symlink";
+    run_test(
+        config_dirname,
+        ("symlink_test", ""),
+        TestResult::Matched {
+            lbuffer: "SUCCESS",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+}

@@ -86,8 +86,8 @@ impl Config {
 
         for entry in dir {
             let entry = entry?;
-            if entry.file_type()?.is_file() {
-                let path = entry.path();
+            let path = entry.path();
+            if path.is_file() {
                 if let Some(ext) = path.extension()
                     && (ext == "toml" || ext == "yaml" || ext == "yml")
                 {
