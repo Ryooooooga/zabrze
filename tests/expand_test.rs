@@ -964,3 +964,17 @@ fn test_symlink() {
         },
     );
 }
+
+#[test]
+fn test_symlink_to_symlink() {
+    let config_dirname = "symlink_to_symlink";
+    run_test(
+        config_dirname,
+        ("symlink_test", ""),
+        TestResult::Matched {
+            lbuffer: "SUCCESS",
+            rbuffer: "",
+            placeholder: "",
+        },
+    );
+}
