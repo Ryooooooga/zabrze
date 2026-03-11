@@ -87,12 +87,11 @@ impl Config {
         for entry in dir {
             let entry = entry?;
             let path = entry.path(); // to follow symlink #58
-            if path.is_file() {
-                if let Some(ext) = path.extension()
-                    && (ext == "toml" || ext == "yaml" || ext == "yml")
-                {
-                    paths.push(path);
-                }
+            if path.is_file()
+                && let Some(ext) = path.extension()
+                && (ext == "toml" || ext == "yaml" || ext == "yml")
+            {
+                paths.push(path);
             }
         }
 
