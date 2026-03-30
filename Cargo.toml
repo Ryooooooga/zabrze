@@ -20,4 +20,4 @@ thiserror = "2.0"
 toml = "1.1"
 
 [dev-dependencies]
-insta = "1.46"
+insta = "1.47"
