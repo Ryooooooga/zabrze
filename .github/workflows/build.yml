@@ -183,7 +183,7 @@ jobs:
           commit_message: brew formula update for zabrze
 
       - name: Upload
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
           files: |
